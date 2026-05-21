@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2026년 구매계약실 상반기 워크샵 </title>
+    <title>구매의 봄 - 통합 데이터 진단 리포트</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <style>
@@ -1247,6 +1247,30 @@ let allMbti = [], allSatData = [], allBalData = [];
 let vocList = [];
 let selectedVocCat = '';
 
+/* ── 파트1 데이터 localStorage 저장/불러오기 ── */
+const P1_KEY = 'spring_part1_v1';
+
+function savePart1() {
+    try {
+        localStorage.setItem(P1_KEY, JSON.stringify({
+            allMbti, allSatData, allBalData, vocList, nicknames
+        }));
+    } catch(e) {}
+}
+
+function loadPart1() {
+    try {
+        const raw = localStorage.getItem(P1_KEY);
+        if (!raw) return;
+        const d = JSON.parse(raw);
+        if (d.allMbti)    allMbti    = d.allMbti;
+        if (d.allSatData) allSatData = d.allSatData;
+        if (d.allBalData) allBalData = d.allBalData;
+        if (d.vocList)    vocList    = d.vocList;
+        if (d.nicknames)  nicknames  = d.nicknames;
+    } catch(e) {}
+}
+
 // 파트2
 let userData2 = { nick: "" };
 let voteCount = 0;
@@ -1625,7 +1649,10 @@ function loadQuestions() {
     } catch(e) {}
 }
 // 페이지 로드 시 저장된 문제 불러오기
-window.addEventListener('DOMContentLoaded', () => { loadQuestions(); });
+window.addEventListener('DOMContentLoaded', () => {
+    loadQuestions();
+    loadPart1();
+});
 
 /* ════════════════════════════════════════
    관리자 탭
@@ -2421,10 +2448,11 @@ function adminDeletePart1Nick(nick){
     const idx=nicknames.findIndex(n=>n.n===nick);
     if(idx>=0){if(idx<allMbti.length)allMbti.splice(idx,1);if(idx<allSatData.length)allSatData.splice(idx,1);if(idx<allBalData.length)allBalData.splice(idx,1);nicknames.splice(idx,1);}
     for(let i=vocList.length-1;i>=0;i--){if(vocList[i].nick===nick)vocList.splice(i,1);}
+    savePart1();
     openAdmin1();
 }
-function adminDeleteVoc(idx){if(!confirm('이 VOC 항목을 삭제하시겠습니까?')) return; vocList.splice(idx,1); openAdmin1();}
-function adminReset1(){if(!confirm('파트1의 모든 데이터를 초기화하시겠습니까?')) return; allMbti=[];allSatData=[];allBalData=[];vocList=[];nicknames=nicknames.filter(n=>speedRanking.some(r=>r.nick===n.n));openAdmin1();alert('파트1 데이터가 초기화되었습니다.');}
+function adminDeleteVoc(idx){if(!confirm('이 VOC 항목을 삭제하시겠습니까?')) return; vocList.splice(idx,1); savePart1(); openAdmin1();}
+function adminReset1(){if(!confirm('파트1의 모든 데이터를 초기화하시겠습니까?')) return; allMbti=[];allSatData=[];allBalData=[];vocList=[];nicknames=nicknames.filter(n=>speedRanking.some(r=>r.nick===n.n));savePart1();openAdmin1();alert('파트1 데이터가 초기화되었습니다.');}
 function adminDownloadAll1(){
     if(!allMbti.length&&!vocList.length) return alert('다운로드할 데이터가 없습니다.');
     const bom='\uFEFF'; let csv='파트,닉네임,MBTI,만족도평균,밸런스A비율,VOC카테고리,VOC내용,VOC시간\n';
@@ -2443,7 +2471,7 @@ function downloadVoc(){
 ════════════════════════════════════════ */
 function openAdmin2(){
     showSection('step-admin2');
-    // 새 게임 세션 준비: idle 상태로 초기화
+    // 게임 진행 상태만 초기화 (문제 데이터는 보존)
     setGameState({ state:'idle', qIdx:-1, q:null });
     try { localStorage.removeItem(LS_PLAYERS); localStorage.removeItem(LS_ANSWERS); } catch(e) {}
     switchAdminTab('make');
@@ -2577,6 +2605,7 @@ function recordBal(c) {
         allMbti.push(userData.mbti);
         allSatData.push([...satAns]);
         allBalData.push([...balAns]);
+        savePart1(); // localStorage에 저장
         // VOC 입력 초기화 후 VOC 화면으로
         selectedVocCat = '';
         document.querySelectorAll('.voc-cat-btn').forEach(b => b.classList.remove('active'));
@@ -2617,6 +2646,7 @@ function submitVoc() {
         text: text,
         time: new Date().toLocaleString('ko-KR')
     });
+    savePart1(); // localStorage에 저장
     renderDashboard1();
 }
 
