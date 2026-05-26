@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>구매의 봄 - 통합 데이터 진단 리포트</title>
+    <!-- Firebase Realtime Database SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
     <style>
@@ -393,7 +396,7 @@
         </div>
 
         <!-- 관리자 접속 버튼 -->
-        <div class="flex flex-col sm:flex-row gap-3 justify-center mt-16 pt-8" style="border-top:1px solid #f1f5f9">
+        <div class="flex flex-col sm:flex-row gap-3 justify-center mt-16 pt-8" style="border-top:1px solid #f1f5f9;flex-wrap:wrap">
             <button onclick="openAdminLogin(1)"
                 style="background:none;border:none;color:#cbd5e1;font-size:.75rem;font-weight:700;cursor:pointer;padding:.4rem .8rem;border-radius:.5rem;transition:color .2s"
                 onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
@@ -403,6 +406,11 @@
                 style="background:none;border:none;color:#cbd5e1;font-size:.75rem;font-weight:700;cursor:pointer;padding:.4rem .8rem;border-radius:.5rem;transition:color .2s"
                 onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
                 🔒 파트2 관리자
+            </button>
+            <button onclick="openFbModal()" id="fb-connect-btn"
+                style="background:none;border:1px solid #fde68a;color:#d97706;font-size:.75rem;font-weight:700;cursor:pointer;padding:.4rem .9rem;border-radius:.5rem;transition:all .2s"
+                onmouseover="this.style.background='#fef9c3'" onmouseout="this.style.background='none'">
+                🔥 Firebase 연결
             </button>
         </div>
     </div>
@@ -741,6 +749,32 @@
 
         <button onclick="goToLanding()" class="w-full bg-white border-2 border-slate-100 text-slate-400 py-6 rounded-3xl font-black text-xl hover:text-yellow-500 transition shadow-sm">← 처음으로</button>
     </section>
+    <!-- Firebase 설정 모달 -->
+    <div id="fb-config-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center">
+        <div style="background:white;border-radius:1.5rem;padding:2rem;width:min(94vw,480px);box-shadow:0 25px 50px rgba(0,0,0,.3)">
+            <div style="text-align:center;margin-bottom:1.25rem">
+                <div style="font-size:1.8rem;margin-bottom:.4rem">🔥</div>
+                <h3 style="font-size:1.15rem;font-weight:900;color:#1e293b;margin-bottom:.3rem">Firebase 실시간 연결 설정</h3>
+                <p style="font-size:.78rem;color:#94a3b8;font-weight:600;line-height:1.6">
+                    다른 기기 간 실시간 연결을 위해 Firebase 정보를 입력하세요.<br>
+                    <a href="https://console.firebase.google.com" target="_blank" style="color:#f59e0b;font-weight:700">Firebase 콘솔 →</a>에서 무료로 생성 가능합니다.
+                </p>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:.55rem;margin-bottom:.9rem">
+                <input id="fb-apiKey"      type="text" placeholder="apiKey"  style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
+                <input id="fb-authDomain"  type="text" placeholder="authDomain (xxx.firebaseapp.com)" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
+                <input id="fb-databaseURL" type="text" placeholder="databaseURL (https://xxx-default-rtdb.firebaseio.com)" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
+                <input id="fb-projectId"   type="text" placeholder="projectId" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
+                <input id="fb-appId"       type="text" placeholder="appId" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
+            </div>
+            <p id="fb-error" style="font-size:.75rem;color:#ef4444;font-weight:700;min-height:1rem;margin-bottom:.6rem;text-align:center"></p>
+            <div style="display:flex;gap:.6rem">
+                <button onclick="closeFbModal()" style="flex:1;padding:.8rem;border:1.5px solid #e2e8f0;border-radius:.75rem;font-weight:900;font-size:.85rem;color:#94a3b8;cursor:pointer;background:white">취소</button>
+                <button onclick="connectFirebase()" style="flex:2;padding:.8rem;background:#f59e0b;border:none;border-radius:.75rem;font-weight:900;font-size:.88rem;color:white;cursor:pointer">🔥 연결하기</button>
+            </div>
+        </div>
+    </div>
+
     <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center">
         <div style="background:white;border-radius:1.5rem;padding:2.5rem;width:min(90vw,380px);box-shadow:0 25px 50px -12px rgba(0,0,0,.35);text-align:center">
             <div style="font-size:2rem;margin-bottom:.5rem">🔒</div>
@@ -1325,89 +1359,246 @@ let _playerTimerBar   = null;
 let currentPlayer = null; // 현재 참여자 로컬 데이터
 
 // localStorage 키
-const LS_STATE   = 'gq_game_state';   // 게임 상태 (관리자→참여자)
-const LS_PLAYERS = 'gq_players';      // 참여자 목록 (참여자→관리자)
-const LS_ANSWERS = 'gq_answers';      // 응답 데이터 (참여자→관리자)
-const LS_RESULT  = 'gq_results';      // 최종 결과 (관리자→참여자)
+/* ════════════════════════════════════════
+   Firebase 실시간 통신 레이어
+   - fbReady: Firebase 연결 완료 여부
+   - 미연결 시 localStorage 폴백 사용
+════════════════════════════════════════ */
+let fbReady = false;
+let fbDb    = null;
+const FB_ROOT = 'gq_session'; // Firebase DB 경로 루트
 
-// 게임 상태 읽기
-function getGameState() {
-    try { return JSON.parse(localStorage.getItem(LS_STATE)) || { state:'idle', qIdx:-1, q:null }; }
-    catch(e) { return { state:'idle', qIdx:-1, q:null }; }
-}
-// 게임 상태 쓰기 (관리자 전용)
-function setGameState(obj) {
-    try { localStorage.setItem(LS_STATE, JSON.stringify({ ...getGameState(), ...obj, ts: Date.now() })); }
-    catch(e) {}
-}
-// 참여자 목록 읽기
-function getPlayers() {
-    try { return JSON.parse(localStorage.getItem(LS_PLAYERS)) || []; }
-    catch(e) { return []; }
-}
-// 참여자 등록 (참여자 탭에서 호출)
-function registerPlayerLS(nick) {
-    const list = getPlayers();
-    if (!list.find(p => p.nick === nick)) {
-        list.push({ nick, score:0, correct:0, totalTime:0, ts: Date.now() });
-        try { localStorage.setItem(LS_PLAYERS, JSON.stringify(list)); } catch(e) {}
-    }
-    currentPlayer = list.find(p => p.nick === nick);
-}
-// 내 점수 갱신
-function updateMyScore(score, correct, totalTime) {
-    const list = getPlayers();
-    const me = list.find(p => p.nick === (currentPlayer ? currentPlayer.nick : ''));
-    if (me) { me.score = score; me.correct = correct; me.totalTime = totalTime; }
-    try { localStorage.setItem(LS_PLAYERS, JSON.stringify(list)); } catch(e) {}
-}
-// 응답 데이터 읽기
-function getAnswers(qIdx) {
-    try { return (JSON.parse(localStorage.getItem(LS_ANSWERS)) || {})[qIdx] || []; }
-    catch(e) { return []; }
-}
-// 응답 저장 (참여자 탭에서 호출)
-function saveAnswer(qIdx, nick, choice, elapsed) {
+/* ── Firebase 설정 모달 ── */
+function openFbModal() {
+    // 저장된 설정 불러오기
     try {
-        const all = JSON.parse(localStorage.getItem(LS_ANSWERS)) || {};
-        if (!all[qIdx]) all[qIdx] = [];
-        if (!all[qIdx].find(a => a.nick === nick)) {
-            all[qIdx].push({ nick, choice, elapsed });
-        }
-        localStorage.setItem(LS_ANSWERS, JSON.stringify(all));
+        const saved = JSON.parse(localStorage.getItem('fb_config') || '{}');
+        ['apiKey','authDomain','databaseURL','projectId','appId'].forEach(k => {
+            const el = document.getElementById('fb-'+k);
+            if (el && saved[k]) el.value = saved[k];
+        });
     } catch(e) {}
+    document.getElementById('fb-config-modal').style.display = 'flex';
+}
+function closeFbModal() { document.getElementById('fb-config-modal').style.display = 'none'; }
+
+function connectFirebase() {
+    const config = {
+        apiKey:      document.getElementById('fb-apiKey').value.trim(),
+        authDomain:  document.getElementById('fb-authDomain').value.trim(),
+        databaseURL: document.getElementById('fb-databaseURL').value.trim(),
+        projectId:   document.getElementById('fb-projectId').value.trim(),
+        appId:       document.getElementById('fb-appId').value.trim(),
+    };
+    const errEl = document.getElementById('fb-error');
+    if (!config.databaseURL) { errEl.innerText = 'databaseURL을 입력해주세요.'; return; }
+    errEl.innerText = '연결 중...';
+    try {
+        // 이미 초기화된 앱 제거 후 재초기화
+        if (firebase.apps.length) { firebase.apps.forEach(a => a.delete()); }
+        firebase.initializeApp(config);
+        fbDb = firebase.database();
+        // 연결 테스트
+        fbDb.ref('.info/connected').once('value').then(snap => {
+            fbReady = true;
+            localStorage.setItem('fb_config', JSON.stringify(config));
+            closeFbModal();
+            updateFbBtn(true);
+            alert('✅ Firebase 연결 성공! 이제 다른 기기와 실시간으로 연결됩니다.');
+            // 참여자 폴링 → Firebase 리스너로 전환
+            if (currentPlayer) attachPlayerListener();
+        }).catch(e => { errEl.innerText = '연결 실패: ' + e.message; });
+    } catch(e) { errEl.innerText = '초기화 오류: ' + e.message; }
 }
 
-// ── 관리자용 로컬 캐시 ──
-let _cachedState   = { state:'idle', qIdx:-1, q:null };
+function updateFbBtn(connected) {
+    const btn = document.getElementById('fb-connect-btn');
+    if (!btn) return;
+    if (connected) {
+        btn.innerText = '🔥 Firebase 연결됨';
+        btn.style.color = '#15803d';
+        btn.style.borderColor = '#86efac';
+    } else {
+        btn.innerText = '🔥 Firebase 연결';
+        btn.style.color = '#d97706';
+        btn.style.borderColor = '#fde68a';
+    }
+}
+
+// 페이지 로드 시 저장된 Firebase 설정 자동 연결 시도
+window.addEventListener('DOMContentLoaded', () => {
+    loadQuestions(); loadPart1();
+    try {
+        const saved = JSON.parse(localStorage.getItem('fb_config') || '{}');
+        if (saved.databaseURL && saved.apiKey) {
+            ['apiKey','authDomain','databaseURL','projectId','appId'].forEach(k => {
+                const el = document.getElementById('fb-'+k);
+                if (el && saved[k]) el.value = saved[k];
+            });
+            connectFirebase();
+        }
+    } catch(e) {}
+});
+
+/* ── 게임 상태 쓰기 (관리자 전용) ── */
+function setGameState(obj) {
+    const merged = { ...getGameStateCache(), ...obj, ts: Date.now() };
+    _gsCache = merged;
+    if (fbReady && fbDb) {
+        fbDb.ref(FB_ROOT + '/gameState').set(merged);
+    } else {
+        try { localStorage.setItem('gq_game_state', JSON.stringify(merged)); } catch(e) {}
+    }
+}
+
+/* ── 게임 상태 읽기 (캐시) ── */
+let _gsCache = { state:'idle', qIdx:-1, q:null };
+function getGameStateCache() { return _gsCache; }
+function getGameState() { return _gsCache; }
+
+/* ── 참여자 등록 ── */
+function registerPlayerLS(nick) {
+    currentPlayer = { nick, score:0, correct:0, totalTime:0 };
+    if (fbReady && fbDb) {
+        fbDb.ref(FB_ROOT + '/players/' + nick.replace(/[.#$[\]]/g,'_')).set({
+            nick, score:0, correct:0, totalTime:0, ts: Date.now()
+        });
+    } else {
+        try {
+            const list = JSON.parse(localStorage.getItem('gq_players') || '[]');
+            if (!list.find(p => p.nick === nick)) list.push({ nick, score:0, correct:0, totalTime:0 });
+            localStorage.setItem('gq_players', JSON.stringify(list));
+        } catch(e) {}
+    }
+}
+
+/* ── 참여자 목록 읽기 (캐시) ── */
+let _playersCache = [];
+function getPlayers() { return _playersCache; }
+
+/* ── 내 점수 갱신 ── */
+function updateMyScore(score, correct, totalTime) {
+    if (!currentPlayer) return;
+    currentPlayer.score = score; currentPlayer.correct = correct; currentPlayer.totalTime = totalTime;
+    if (fbReady && fbDb) {
+        const key = currentPlayer.nick.replace(/[.#$[\]]/g,'_');
+        fbDb.ref(FB_ROOT + '/players/' + key).update({ score, correct, totalTime });
+    } else {
+        try {
+            const list = JSON.parse(localStorage.getItem('gq_players') || '[]');
+            const me = list.find(p => p.nick === currentPlayer.nick);
+            if (me) { me.score = score; me.correct = correct; me.totalTime = totalTime; }
+            localStorage.setItem('gq_players', JSON.stringify(list));
+        } catch(e) {}
+    }
+}
+
+/* ── 응답 저장 ── */
+let _answersCache = {};
+function getAnswers(qIdx) { return _answersCache[qIdx] || []; }
+
+function saveAnswer(qIdx, nick, choice, elapsed) {
+    if (!_answersCache[qIdx]) _answersCache[qIdx] = [];
+    const existing = _answersCache[qIdx].find(a => a.nick === nick);
+    if (!existing) _answersCache[qIdx].push({ nick, choice, elapsed });
+    if (fbReady && fbDb) {
+        const key = nick.replace(/[.#$[\]]/g,'_');
+        fbDb.ref(FB_ROOT + '/answers/q' + qIdx + '/' + key).set({ nick, choice, elapsed });
+    } else {
+        try {
+            const all = JSON.parse(localStorage.getItem('gq_answers') || '{}');
+            if (!all[qIdx]) all[qIdx] = [];
+            if (!all[qIdx].find(a => a.nick === nick)) all[qIdx].push({ nick, choice, elapsed });
+            localStorage.setItem('gq_answers', JSON.stringify(all));
+            _answersCache = all;
+        } catch(e) {}
+    }
+}
+
+/* ── 관리자: Firebase 리스너 시작 ── */
 let _adminPollTimer = null;
 
-// 관리자 폴링 시작 (500ms마다 참여자 목록·응답 갱신)
 function startAdminPoll() {
-    stopAdminPoll();
-    _adminPollTimer = setInterval(() => {
-        refreshGamePanel();
-        if (_cachedState.state === 'showing') updateAnswerDist();
-    }, 500);
+    if (fbReady && fbDb) {
+        // Firebase 실시간 리스너
+        fbDb.ref(FB_ROOT + '/players').on('value', snap => {
+            const data = snap.val() || {};
+            _playersCache = Object.values(data);
+            refreshGamePanel();
+        });
+        fbDb.ref(FB_ROOT + '/answers').on('value', snap => {
+            const data = snap.val() || {};
+            // q0, q1... 키 → 숫자 인덱스로 변환
+            _answersCache = {};
+            Object.entries(data).forEach(([k, v]) => {
+                const idx = parseInt(k.replace('q',''));
+                _answersCache[idx] = Object.values(v || {});
+            });
+            const gs = getGameState();
+            if (gs.state === 'showing') updateAnswerDist();
+        });
+    } else {
+        // localStorage 폴백 폴링
+        stopAdminPoll();
+        _adminPollTimer = setInterval(() => {
+            try {
+                _playersCache = JSON.parse(localStorage.getItem('gq_players') || '[]');
+                _answersCache = JSON.parse(localStorage.getItem('gq_answers') || '{}');
+            } catch(e) {}
+            refreshGamePanel();
+            const gs = getGameState();
+            if (gs.state === 'showing') updateAnswerDist();
+        }, 500);
+    }
 }
-function stopAdminPoll() { clearInterval(_adminPollTimer); }
+function stopAdminPoll() {
+    clearInterval(_adminPollTimer);
+    if (fbReady && fbDb) {
+        try { fbDb.ref(FB_ROOT + '/players').off(); fbDb.ref(FB_ROOT + '/answers').off(); } catch(e) {}
+    }
+}
 
-// ── 참여자용 폴링 ──
+/* ── 참여자: Firebase 리스너 시작 ── */
 let _playerPollTimer = null;
-let _lastSeenQIdx = -2;
-let _lastSeenState = '';
+let _lastSeenState = '', _lastSeenQIdx = -2;
 
 function startPlayerPoll() {
-    stopPlayerPoll();
-    _playerPollTimer = setInterval(() => {
-        const gs = getGameState();
-        if (gs.state === _lastSeenState && gs.qIdx === _lastSeenQIdx) return; // 변화 없음
-        _lastSeenState = gs.state;
-        _lastSeenQIdx  = gs.qIdx;
-        onGameStateChanged(gs);
-    }, 400);
+    if (fbReady && fbDb) {
+        attachPlayerListener();
+    } else {
+        stopPlayerPoll();
+        _playerPollTimer = setInterval(() => {
+            try {
+                const raw = localStorage.getItem('gq_game_state');
+                if (!raw) return;
+                const gs = JSON.parse(raw);
+                _gsCache = gs;
+                if (gs.state === _lastSeenState && gs.qIdx === _lastSeenQIdx) return;
+                _lastSeenState = gs.state; _lastSeenQIdx = gs.qIdx;
+                onGameStateChanged(gs);
+            } catch(e) {}
+        }, 400);
+    }
 }
-function stopPlayerPoll() { clearInterval(_playerPollTimer); }
+
+function attachPlayerListener() {
+    if (!fbDb) return;
+    fbDb.ref(FB_ROOT + '/gameState').on('value', snap => {
+        const gs = snap.val();
+        if (!gs) return;
+        _gsCache = gs;
+        if (gs.state === _lastSeenState && gs.qIdx === _lastSeenQIdx) return;
+        _lastSeenState = gs.state; _lastSeenQIdx = gs.qIdx;
+        onGameStateChanged(gs);
+    });
+}
+
+function stopPlayerPoll() {
+    clearInterval(_playerPollTimer);
+    if (fbReady && fbDb) {
+        try { fbDb.ref(FB_ROOT + '/gameState').off(); } catch(e) {}
+    }
+}
 
 // 참여자: 게임 상태 변화 처리
 function onGameStateChanged(gs) {
@@ -1649,11 +1840,6 @@ function loadQuestions() {
         if (raw) { customQuestions = JSON.parse(raw); renderQListAdmin(); }
     } catch(e) {}
 }
-// 페이지 로드 시 저장된 문제 불러오기
-window.addEventListener('DOMContentLoaded', () => {
-    loadQuestions();
-    loadPart1();
-});
 
 /* ════════════════════════════════════════
    관리자 탭
@@ -1666,10 +1852,15 @@ function switchAdminTab(tab) {
         b.style.background=on?'#1e293b':'white'; b.style.color=on?'white':'#94a3b8'; b.style.borderColor=on?'#1e293b':'#e2e8f0';
     });
     if(tab==='run') {
-        // 게임 탭 진입 시 localStorage 게임상태 초기화 (idle이 아닌 경우 유지)
         const gs = getGameState();
         if (gs.state === 'idle') {
-            try { localStorage.removeItem(LS_PLAYERS); localStorage.removeItem(LS_ANSWERS); } catch(e) {}
+            _playersCache=[]; _answersCache={};
+            if (fbReady && fbDb) {
+                fbDb.ref(FB_ROOT+'/players').remove();
+                fbDb.ref(FB_ROOT+'/answers').remove();
+            } else {
+                try{localStorage.removeItem('gq_players');localStorage.removeItem('gq_answers');}catch(e){}
+            }
         }
         startAdminPoll();
         refreshGamePanel();
@@ -1842,7 +2033,13 @@ function gameStart() {
     if (!pList.length) {
         if (!confirm('아직 입장한 참여자가 없습니다. 그래도 퀴즈를 시작하시겠습니까?')) return;
     }
-    try { localStorage.removeItem(LS_ANSWERS); } catch(e) {}
+    // 응답 초기화
+    _answersCache = {};
+    if (fbReady && fbDb) {
+        fbDb.ref(FB_ROOT + '/answers').remove();
+    } else {
+        try { localStorage.removeItem('gq_answers'); } catch(e) {}
+    }
     setGameState({ state:'started', qIdx:-1, q:null });
     const startWrap = document.getElementById('game-start-wrap');
     if (startWrap) startWrap.style.display = 'none';
@@ -1860,11 +2057,16 @@ function gameShowNextQ() {
     const newIdx = curIdx + 1;
     const q = customQuestions[newIdx];
     // 해당 문제 답변 초기화
-    try {
-        const all = JSON.parse(localStorage.getItem(LS_ANSWERS)) || {};
-        all[newIdx] = [];
-        localStorage.setItem(LS_ANSWERS, JSON.stringify(all));
-    } catch(e) {}
+    _answersCache[newIdx] = [];
+    if (fbReady && fbDb) {
+        fbDb.ref(FB_ROOT + '/answers/q' + newIdx).remove();
+    } else {
+        try {
+            const all = JSON.parse(localStorage.getItem('gq_answers') || '{}');
+            all[newIdx] = [];
+            localStorage.setItem('gq_answers', JSON.stringify(all));
+        } catch(e) {}
+    }
     setGameState({ state:'showing', qIdx: newIdx, q });
     _showQuestionInAdminPanel(newIdx);
 }
@@ -1874,11 +2076,16 @@ function gameShowPrevQ() {
     if(gs.qIdx <= 0) return alert('첫 번째 문제입니다. 이전 문제가 없습니다.');
     const newIdx = gs.qIdx - 1;
     const q = customQuestions[newIdx];
-    try {
-        const all = JSON.parse(localStorage.getItem(LS_ANSWERS)) || {};
-        all[newIdx] = [];
-        localStorage.setItem(LS_ANSWERS, JSON.stringify(all));
-    } catch(e) {}
+    _answersCache[newIdx] = [];
+    if (fbReady && fbDb) {
+        fbDb.ref(FB_ROOT + '/answers/q' + newIdx).remove();
+    } else {
+        try {
+            const all = JSON.parse(localStorage.getItem('gq_answers') || '{}');
+            all[newIdx] = [];
+            localStorage.setItem('gq_answers', JSON.stringify(all));
+        } catch(e) {}
+    }
     setGameState({ state:'showing', qIdx: newIdx, q });
     _showQuestionInAdminPanel(newIdx);
 }
@@ -2505,9 +2712,14 @@ function downloadVoc(){
 ════════════════════════════════════════ */
 function openAdmin2(){
     showSection('step-admin2');
-    // 게임 진행 상태만 초기화 (문제 데이터는 보존)
     setGameState({ state:'idle', qIdx:-1, q:null });
-    try { localStorage.removeItem(LS_PLAYERS); localStorage.removeItem(LS_ANSWERS); } catch(e) {}
+    _playersCache = []; _answersCache = {};
+    if (fbReady && fbDb) {
+        fbDb.ref(FB_ROOT + '/players').remove();
+        fbDb.ref(FB_ROOT + '/answers').remove();
+    } else {
+        try { localStorage.removeItem('gq_players'); localStorage.removeItem('gq_answers'); } catch(e) {}
+    }
     switchAdminTab('make');
 }
 
@@ -2578,2927 +2790,13 @@ function adminReset2(){
     nicknames=nicknames.filter(n=>allMbti.some((_,i)=>nicknames[i]&&nicknames[i].n===n.n));
     nicknames.forEach(n=>n.v=0);
     setGameState({state:'idle',qIdx:-1,q:null});
-    try{localStorage.removeItem(LS_PLAYERS);localStorage.removeItem(LS_ANSWERS);}catch(e){}
-    stopAdminPoll();
-    refreshDataPanel();
-    alert('파트2 데이터가 초기화되었습니다.');
-}
-function adminDownloadAll2(){
-    if(!speedRanking.length) return alert('다운로드할 데이터가 없습니다.');
-    const bom='\uFEFF'; let csv='순위,닉네임,점수,정답수,풀이시간(초),투표수\n';
-    speedRanking.forEach((r,i)=>{const n=nicknames.find(x=>x.n===r.nick);csv+=`${i+1},"${r.nick}",${r.score},${r.correct},${r.time},${n?n.v:0}\n`;});
-    const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='구매의봄_파트2_전체_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
-}
-
-/* ════════════════════════════════════════
-   파트 1 — 인트로
-════════════════════════════════════════ */
-function handleStart() {
-    userData.nick = document.getElementById('user-nick').value.trim();
-    userData.mbti = document.getElementById('user-mbti').value;
-    if (!userData.nick || !userData.mbti) return alert("닉네임과 MBTI를 입력해주세요.");
-
-    // 파트1 내 닉네임 중복 체크 (파트2 닉네임과는 독립)
-    const part1nicks = allMbti.map((_, i) => nicknames[i] ? nicknames[i].n : '');
-    if (part1nicks.includes(userData.nick)) {
-        return alert(`"${userData.nick}" 닉네임은 이미 파트1에 참여했습니다.\n다른 닉네임을 사용해주세요.`);
-    }
-
-    if (!nicknames.some(x => x.n === userData.nick)) nicknames.push({ n: userData.nick, v: 0 });
-
-    // 매 참여마다 진행 상태 초기화 (두 번째 참여자 undefined 오류 방지)
-    curSat = 0; curBal = 0;
-    satAns = []; balAns = [];
-
-    showSection('step-satisfaction');
-    updateSat();
-}
-
-/* ════════════════════════════════════════
-   파트 1 — 만족도
-════════════════════════════════════════ */
-function recordSat(s) {
-    satAns[curSat] = s; curSat++;
-    if (curSat < 10) updateSat();
-    else { showSection('step-balance'); updateBal(); }
-}
-function prevSat() { if (curSat > 0) { curSat--; updateSat(); } }
-function updateSat() {
-    document.getElementById('sat-question').innerText = satQuestions[curSat];
-    document.getElementById('sat-progress').innerText = `${curSat + 1} / 10`;
-    document.getElementById('sat-back-container').classList.toggle('hidden', curSat === 0);
-}
-
-/* ════════════════════════════════════════
-   파트 1 — 밸런스 게임
-════════════════════════════════════════ */
-function recordBal(c) {
-    balAns[curBal] = c; curBal++;
-    if (curBal < 35) updateBal();
-    else {
-        allMbti.push(userData.mbti);
-        allSatData.push([...satAns]);
-        allBalData.push([...balAns]);
-        savePart1(); // localStorage에 저장
-        // VOC 입력 초기화 후 VOC 화면으로
-        selectedVocCat = '';
-        document.querySelectorAll('.voc-cat-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('voc-text').value = '';
-        showSection('step-voc');
-    }
-}
-function prevBal() {
-    if (curBal > 0) { curBal--; updateBal(); }
-    else { showSection('step-satisfaction'); curSat = 9; updateSat(); }
-}
-function updateBal() {
-    const q = balQuestions[curBal];
-    document.getElementById('bal-category').innerText = q.cat;
-    document.getElementById('bal-question').innerText = q.q;
-    document.getElementById('btn-a').innerText = q.a;
-    document.getElementById('btn-b').innerText = q.b;
-    document.getElementById('bal-count').innerText = `${curBal + 1} / 35`;
-}
-
-/* ════════════════════════════════════════
-   파트 1 — VOC
-════════════════════════════════════════ */
-function selectVocCat(cat) {
-    selectedVocCat = cat;
-    document.querySelectorAll('.voc-cat-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById('voc-cat-' + cat);
-    if (btn) btn.classList.add('active');
-}
-
-function submitVoc() {
-    const text = document.getElementById('voc-text').value.trim();
-    if (!selectedVocCat) return alert('카테고리를 선택해주세요.');
-    if (!text) return alert('의견 내용을 입력해주세요.');
-    vocList.push({
-        nick: userData.nick,
-        cat: selectedVocCat,
-        text: text,
-        time: new Date().toLocaleString('ko-KR')
-    });
-    savePart1(); // localStorage에 저장
-    renderDashboard1();
-}
-
-function skipVoc() {
-    renderDashboard1();
-}
-
-function renderVocDashboard() {
-    const el = document.getElementById('voc-dashboard');
-    const countEl = document.getElementById('stat-voc-count');
-    if (countEl) countEl.innerHTML = vocList.length + '<span class="text-sm font-bold">건</span>';
-
-    if (!vocList.length) {
-        el.innerHTML = '<p class="text-slate-400 text-sm font-bold italic text-center py-6">아직 접수된 VOC가 없습니다.</p>';
-        return;
-    }
-
-    // 카테고리별 집계
-    const cats = ['소통','업무','조직','결정','성장'];
-    const icons = { 소통:'💬', 업무:'🛠', 조직:'🏛', 결정:'⚖️', 성장:'🌱' };
-    const colors = { 소통:'#3b82f6', 업무:'#10b981', 조직:'#f59e0b', 결정:'#ef4444', 성장:'#a855f7' };
-    const grouped = {};
-    cats.forEach(c => { grouped[c] = []; });
-    vocList.forEach(v => { if (grouped[v.cat]) grouped[v.cat].push(v); });
-
-    // 집계 카드
-    const summaryHtml = `
-        <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:.75rem;margin-bottom:1.5rem">
-            ${cats.map(c => `
-                <div style="background:#f8fafc;border-radius:1rem;padding:1rem;text-align:center;border:2px solid ${grouped[c].length ? colors[c]+'33' : '#f1f5f9'}">
-                    <p style="font-size:1.3rem">${icons[c]}</p>
-                    <p style="font-size:.75rem;font-weight:900;color:#64748b;margin:.25rem 0">${c}</p>
-                    <p style="font-size:1.6rem;font-weight:900;color:${grouped[c].length ? colors[c] : '#cbd5e1'}">${grouped[c].length}<span style="font-size:.75rem;font-weight:700">건</span></p>
-                </div>`).join('')}
-        </div>`;
-
-    // VOC 목록 (카테고리별)
-    const listHtml = cats.filter(c => grouped[c].length > 0).map(c => `
-        <div style="margin-bottom:1rem">
-            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem">
-                <span style="width:.4rem;height:1.2rem;background:${colors[c]};border-radius:9999px;display:inline-block"></span>
-                <span style="font-weight:900;font-size:.9rem;color:#1e293b">${icons[c]} ${c}</span>
-                <span style="font-size:.75rem;font-weight:700;color:#94a3b8">(${grouped[c].length}건)</span>
-            </div>
-            ${grouped[c].map((v, i) => `
-                <div style="background:white;border:1px solid #f1f5f9;border-radius:.75rem;padding:.8rem 1rem;margin-bottom:.4rem;border-left:3px solid ${colors[c]}">
-                    <p style="font-size:.85rem;font-weight:600;color:#334155;line-height:1.5">${v.text}</p>
-                </div>`).join('')}
-        </div>`).join('');
-
-    el.innerHTML = summaryHtml + listHtml;
-}
-
-function downloadVoc() {
-    if (!vocList.length) return alert('다운로드할 VOC 데이터가 없습니다.');
-    const header = '번호,닉네임,카테고리,내용,접수시간\n';
-    const rows = vocList.map((v, i) =>
-        `${i+1},"${v.nick}","${v.cat}","${v.text.replace(/"/g,'""')}","${v.time}"`
-    ).join('\n');
-    const bom = '\uFEFF'; // 엑셀 한글 깨짐 방지 BOM
-    const blob = new Blob([bom + header + rows], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = '구매의봄_VOC_' + new Date().toISOString().slice(0,10) + '.csv';
-    a.click();
-    URL.revokeObjectURL(url);
-}
-
-/* ════════════════════════════════════════
-   파트 1 대시보드 렌더링
-════════════════════════════════════════ */
-function renderDashboard1(fromLanding = false) {
-    showSection('step-dashboard1');
-
-    // 참여인원
-    document.getElementById('stat-mbti-count').innerHTML = allMbti.length + '<span class="text-sm font-bold">명</span>';
-    document.getElementById('stat-sat-count').innerHTML  = allSatData.length + '<span class="text-sm font-bold">명</span>';
-    document.getElementById('stat-bal-count').innerHTML  = allBalData.length + '<span class="text-sm font-bold">명</span>';
-
-    // MBTI 집계
-    const sjTypes = ['ISTJ','ISFJ','ESTJ','ESFJ'];
-    const ntTypes = ['INTJ','INTP','ENTJ','ENTP'];
-    const nfTypes = ['INFJ','INFP','ENFJ','ENFP'];
-    const spTypes = ['ISTP','ISFP','ESTP','ESFP'];
-    const mbtiGroupMap = { SJ:0, NT:0, NF:0, SP:0 };
-    allMbti.forEach(m => {
-        if (sjTypes.includes(m)) mbtiGroupMap.SJ++;
-        else if (ntTypes.includes(m)) mbtiGroupMap.NT++;
-        else if (nfTypes.includes(m)) mbtiGroupMap.NF++;
-        else if (spTypes.includes(m)) mbtiGroupMap.SP++;
-    });
-    const mbtiData = allMbti.length
-        ? [mbtiGroupMap.SJ, mbtiGroupMap.NT, mbtiGroupMap.NF, mbtiGroupMap.SP]
-        : [1, 1, 1, 1];
-
-    // 만족도 집계
-    let satAvg = [0, 0, 0, 0, 0];
-    if (allSatData.length) {
-        const sums = Array(10).fill(0);
-        allSatData.forEach(ans => ans.forEach((v, i) => { sums[i] += v; }));
-        const avgs = sums.map(s => +(s / allSatData.length).toFixed(2));
-        satAvg = [avgs[0], avgs[1], avgs[2], avgs[3],
-            +((avgs[4]+avgs[5]+avgs[6]+avgs[7]+avgs[8]+avgs[9])/6).toFixed(2)];
-    }
-
-    // 밸런스 집계
-    const catRanges = [[0,6],[7,13],[14,20],[21,27],[28,34]];
-    let balRadar = [0, 0, 0, 0, 0];
-    if (allBalData.length) {
-        balRadar = catRanges.map(([s, e]) => {
-            let aCount = 0, total = 0;
-            allBalData.forEach(ans => {
-                for (let i = s; i <= e; i++) { if (ans[i]) { total++; if (ans[i]==='A') aCount++; } }
-            });
-            return total ? Math.round((aCount / total) * 100) : 0;
-        });
-    }
-
-    // 차트: MBTI
-    const mbtiCtx = document.getElementById('chart-mbti');
-    if (mbtiCtx._chart) mbtiCtx._chart.destroy();
-    mbtiCtx._chart = new Chart(mbtiCtx, {
-        type: 'doughnut',
-        data: { labels: ['SJ(관리형)', 'NT(분석형)', 'NF(성장형)', 'SP(적응형)'], datasets: [{ data: mbtiData, backgroundColor: ['#db2777', '#3b82f6', '#10b981', '#f59e0b'] }] },
-        options: { maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10, weight: 'bold' } } } } }
-    });
-
-    // 차트: 만족도
-    const satCtx = document.getElementById('chart-sat');
-    if (satCtx._chart) satCtx._chart.destroy();
-    satCtx._chart = new Chart(satCtx, {
-        type: 'radar',
-        data: { labels: ['해결', '역량', '자율', '효율', '문화'], datasets: [{ label: '평균', data: satAvg, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,0.2)' }] },
-        options: { maintainAspectRatio: false, scales: { r: { min: 0, max: 5 } } }
-    });
-
-    // 차트: 밸런스 레이더
-    const balCtx = document.getElementById('chart-bal-radar');
-    if (balCtx._chart) balCtx._chart.destroy();
-    balCtx._chart = new Chart(balCtx, {
-        type: 'radar',
-        data: { labels: ['소통', '업무', '조직', '결정', '성장'], datasets: [{ label: 'A(원칙/체계) 비율', data: balRadar, borderColor: '#db2777', backgroundColor: 'rgba(219,39,119,0.2)' }] },
-        options: { maintainAspectRatio: false, scales: { r: { min: 0, max: 100 } }, plugins: { legend: { display: false } } }
-    });
-
-    updateMbtiAnalysis(mbtiGroupMap, allMbti.length);
-    updateSatAnalysis(satAvg, allSatData.length);
-    updateBalAnalysis(balRadar, allBalData.length);
-    renderVocDashboard();
-}
-
-/* ════════════════════════════════════════
-   파트 1 — AI 분석 텍스트
-════════════════════════════════════════ */
-function updateMbtiAnalysis(groupMap, total) {
-    const el = document.getElementById('ana-mbti-content');
-    if (!total) {
-        el.innerHTML = `<p class="text-slate-500 italic">아직 참여 데이터가 없습니다.<br>참여자가 응답을 완료하면 AI 분석 결과가 이곳에 표시됩니다.</p>`;
-        return;
-    }
-    const groups = [
-        {key:'SJ', label:'SJ(관리/안정)'}, {key:'NT', label:'NT(분석/전략)'},
-        {key:'NF', label:'NF(성장/공감)'}, {key:'SP', label:'SP(적응/실행)'}
-    ];
-    groups.sort((a,b) => groupMap[b.key] - groupMap[a.key]);
-    const top = groups[0];
-    const topPct = Math.round((groupMap[top.key] / total) * 100);
-    const tPct = Math.round(((groupMap.SJ + groupMap.NT) / total) * 100);
-    const keywords = [];
-    if(groupMap.SJ/total > 0.4) keywords.push('#원칙준수');
-    if(groupMap.NT/total > 0.25) keywords.push('#전략적사고');
-    if(groupMap.NF/total > 0.15) keywords.push('#공감소통');
-    if(groupMap.SP/total > 0.15) keywords.push('#실행력');
-    keywords.push('#구매전문가');
-
-    el.innerHTML = `
-        <p><strong>[조직 DNA 분석]</strong> 현재 우리 조직은 <strong>${top.label} 그룹이 ${topPct}%</strong>로 가장 높은 비중을 차지합니다. ${top.key==='SJ'?'꼼꼼한 검토와 안정적 공급망 관리에 최적화된 엔진을 보유하고 있습니다.':top.key==='NT'?'분석과 전략 고도화에 강한 혁신 에너지가 넘치는 조직입니다.':top.key==='NF'?'공감 능력과 성장 지향성이 강해 팀워크가 뛰어난 조직입니다.':'빠른 적응력과 현장 실행력이 뛰어난 조직입니다.'}</p>
-        <p><strong>[이성/감성 비율]</strong> 이성적 판단(T) 성향이 약 <strong>${tPct}%</strong>로 추정됩니다. ${tPct>=65?'피드백 시 명확한 근거와 데이터 제시가 동기부여에 효과적입니다.':'감성적 공감과 이성적 근거를 균형 있게 활용한 소통이 필요합니다.'}</p>
-        <p class="text-blue-400"><strong>[문화적 제언]</strong> ${total}명의 응답을 기반으로, ${top.key==='SJ'?'원칙과 안정성을 기반으로 스마트한 표준화를 추진하면 더 큰 성과를 낼 수 있습니다.':'다양한 유형이 공존하므로 서로의 강점을 인정하는 열린 피드백 문화가 필요합니다.'}</p>
-        <div class="pt-2 border-t border-slate-700">
-            <span class="inline-block px-2 py-1 bg-pink-900 text-pink-200 rounded text-[10px] font-bold">문화 키워드: ${keywords.join(' ')}</span>
-        </div>`;
-}
-
-function updateSatAnalysis(satAvg, total) {
-    const el = document.getElementById('ana-sat-content');
-    if (!total) {
-        el.innerHTML = `<p class="text-slate-500 italic">아직 참여 데이터가 없습니다.<br>참여자가 응답을 완료하면 AI 분석 결과가 이곳에 표시됩니다.</p>`;
-        return;
-    }
-    const labels = ['해결','역량','자율','효율','문화'];
-    const overall = +(satAvg.reduce((a,b)=>a+b,0)/satAvg.length).toFixed(1);
-    const maxIdx = satAvg.indexOf(Math.max(...satAvg));
-    const minIdx = satAvg.indexOf(Math.min(...satAvg));
-    const scoreEmoji = overall >= 4 ? '🌟' : overall >= 3 ? '✅' : '⚠️';
-    el.innerHTML = `
-        <p><strong>[만족도 현황]</strong> ${total}명 응답 기준 전체 평균 <strong>${overall}점</strong> ${scoreEmoji}. <strong>'${labels[maxIdx]}(${satAvg[maxIdx].toFixed(1)}점)'</strong>이 가장 높고, <strong>'${labels[minIdx]}(${satAvg[minIdx].toFixed(1)}점)'</strong>에서 개선이 필요합니다.</p>
-        <p class="text-blue-400"><strong>조직 행복 솔루션:</strong> ${satAvg[2]>=3.5?'"자율적 업무 환경"이 이미 잘 갖춰진 만큼,':'자율성 강화와 함께,'} ${labels[minIdx]==='효율'?'"불필요한 행정 절차 간소화"가 가장 시급한 과제로 보입니다.':labels[minIdx]==='역량'?'"개인 역량 개발 기회 확대"가 중요한 개선 포인트입니다.':'"구성원 간 신뢰와 소통 강화"가 핵심 과제입니다.'}</p>
-        <p class="text-pink-400"><strong>개선 방향:</strong> ${minIdx===3?'보고·행정 절차보다 핵심 성과 공유 문화 정착이 시급합니다.':minIdx===1?'정기적인 역량 개발 프로그램과 멘토링 시스템 도입을 검토해 보세요.':'지속적인 소통과 투명한 정보 공유 채널을 강화하세요.'}</p>`;
-}
-
-function updateBalAnalysis(balRadar, total) {
-    const grid = document.getElementById('bal-insight-grid');
-    if (!total) {
-        grid.innerHTML = `<div class="md:col-span-2 p-6 bg-slate-800 rounded-2xl text-slate-500 text-xs text-center italic">아직 참여 데이터가 없습니다.<br>참여자가 응답을 완료하면 분석 결과가 이곳에 표시됩니다.</div>`;
-        return;
-    }
-    const cats = [
-        { icon:'💬', title:'소통 스타일', pct: balRadar[0],
-          hiMsg:`결론 중심의 쿨한 소통(${balRadar[0]}%) 경향. 빠른 의사결정이 장점입니다.`,
-          loMsg:`과정 중심의 세심한 소통(${100-balRadar[0]}%) 경향. 충분한 맥락 공유가 강점입니다.`},
-        { icon:'🛠', title:'업무 태도', pct: balRadar[1],
-          hiMsg:`매뉴얼 준수(${balRadar[1]}%) 선호. 탄탄한 리스크 관리가 조직의 무기입니다.`,
-          loMsg:`유연한 대응(${100-balRadar[1]}%) 선호. 창의적 문제해결이 강점입니다.`},
-        { icon:'🏛', title:'조직 문화', pct: balRadar[2],
-          hiMsg:`비즈니스적 프로 관계 선호(${balRadar[2]}%). 효율적 협업 시스템을 추구합니다.`,
-          loMsg:`끈끈한 팀워크 선호(${100-balRadar[2]}%). 강한 유대감이 조직의 힘입니다.`},
-        { icon:'⚖️', title:'결정 기준', pct: balRadar[3],
-          hiMsg:`데이터 기반 결정(${balRadar[3]}%). 숫자로 말하는 조직 문화가 정착되었습니다.`,
-          loMsg:`현장 직관 기반 결정(${100-balRadar[3]}%). 실무 경험을 중시하는 문화입니다.`}
-    ];
-    const overallPct = Math.round(balRadar.reduce((a,b)=>a+b,0)/balRadar.length);
-    const insight = overallPct >= 55
-        ? `우리 조직은 <strong>안정적 체계 위에서 실리를 추구</strong>하는 구매 전문가 집단입니다. '원칙주의'를 '스마트한 표준화'로 승화시킨다면 더 큰 성장이 가능합니다.`
-        : `우리 조직은 <strong>유연함과 관계 중심</strong>의 균형잡힌 문화를 가졌습니다. 체계와 자율을 조화롭게 결합한다면 최고의 시너지를 낼 수 있습니다.`;
-    grid.innerHTML = cats.map(c => `
-        <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs">
-            <h4 class="font-black text-slate-800 mb-1">${c.icon} ${c.title}</h4>
-            <p class="text-slate-500 leading-normal">${c.pct >= 50 ? c.hiMsg : c.loMsg}</p>
-        </div>`).join('') +
-        `<div class="md:col-span-2 p-4 bg-slate-900 rounded-2xl text-white text-[11px] leading-relaxed">
-            <span class="text-pink-400 font-bold block mb-1">Collective AI Insight (${total}명 기반):</span>
-            ${insight}
-        </div>`;
-}
-
-/* ════════════════════════════════════════
-   파트 2 대시보드
-════════════════════════════════════════ */
-function renderDashboard2(fromLanding = false) {
-    showSection('step-dashboard2');
-    document.getElementById('stat-spd-count').innerHTML = speedRanking.length + '<span class="text-sm font-bold">명</span>';
-    renderSpeedRanking();
-    renderGridVote();
-}
-
-function renderSpeedRanking() {
-    const rowEl  = document.getElementById('speed-ranking-row');
-    const restEl = document.getElementById('speed-ranking-rest');
-    if (!speedRanking.length) {
-        rowEl.innerHTML = `<div class="text-center py-10 text-slate-300 font-bold">아직 수료평가 참여 기록이 없습니다.<br><span class="text-xs">게임을 완료하면 이 곳에 랭킹이 표시됩니다.</span></div>`;
-        restEl.innerHTML = '';
-        return;
-    }
-    const myNick = userData2.nick || userData.nick;
-    const myRank = speedRanking.findIndex(r => r.nick === myNick);
-    const myData = myRank >= 0 ? speedRanking[myRank] : null;
-    const medals = ['🥇','🥈','🥉'];
-    const gradients = [
-        'linear-gradient(135deg,#fbbf24,#f59e0b)',
-        'linear-gradient(135deg,#94a3b8,#64748b)',
-        'linear-gradient(135deg,#cd7c2e,#a16207)'
-    ];
-    const top3 = speedRanking.slice(0, 3);
-    rowEl.innerHTML = `
-        <div class="flex flex-col lg:flex-row gap-4 items-stretch">
-            <div class="flex flex-col sm:flex-row gap-3 flex-1">
-                ${top3.map((r, i) => `
-                    <div class="flex-1 rounded-2xl p-5 text-white flex flex-col gap-2 shadow-md" style="background:${gradients[i]}">
-                        <div class="flex items-center justify-between">
-                            <span class="text-3xl">${medals[i]}</span>
-                            <span class="text-[10px] font-black opacity-75 bg-white/20 px-2 py-0.5 rounded-full">${i+1}등</span>
-                        </div>
-                        <p class="font-black text-base leading-tight truncate">${r.nick}</p>
-                        <p class="text-3xl font-black">${r.score}<span class="text-sm font-bold opacity-80">점</span></p>
-                        <p class="text-[11px] opacity-80 font-bold">정답 ${r.correct}개 · ${r.time}초</p>
-                    </div>`).join('')}
-                ${top3.length < 3 ? Array(3 - top3.length).fill(0).map(() =>
-                    `<div class="flex-1 rounded-2xl p-5 bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center">
-                        <span class="text-slate-300 font-bold text-sm">대기중</span>
-                    </div>`).join('') : ''}
-            </div>
-            <div class="hidden lg:flex items-center px-2"><div class="w-px h-full bg-slate-100"></div></div>
-            <div class="lg:w-56 rounded-2xl p-5 flex flex-col gap-2 shadow-sm border-2 ${myData ? 'border-yellow-300 bg-yellow-50' : 'border-slate-100 bg-slate-50'}">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-black ${myData ? 'text-yellow-500' : 'text-slate-400'}">내 순위</span>
-                    <span class="text-[10px] font-bold ${myData ? 'text-yellow-500 bg-yellow-100' : 'text-slate-400 bg-slate-100'} px-2 py-0.5 rounded-full">
-                        ${myData ? (myRank + 1) + '위' : '-'}
-                    </span>
-                </div>
-                <p class="font-black text-base text-slate-800 truncate">${myData ? myData.nick : (myNick || '—')}</p>
-                <p class="text-3xl font-black ${myData ? 'text-yellow-500' : 'text-slate-300'}">${myData ? myData.score : '—'}<span class="text-sm font-bold opacity-60">${myData ? '점' : ''}</span></p>
-                <p class="text-[11px] font-bold ${myData ? 'text-slate-500' : 'text-slate-300'}">
-                    ${myData ? `정답 ${myData.correct}개 · ${myData.time}초` : '수료평가 미참여'}
-                </p>
-            </div>
-        </div>`;
-
-    if (speedRanking.length > 3) {
-        restEl.innerHTML = `<div class="mt-2 space-y-2">` +
-            speedRanking.slice(3).map((r, i) => {
-                const isMe = r.nick === myNick;
-                return `<div class="flex items-center justify-between px-5 py-3 rounded-2xl border ${isMe ? 'bg-yellow-50 border-yellow-200' : 'bg-slate-50 border-slate-100'}">
-                    <span class="font-black text-sm ${isMe ? 'text-yellow-500' : 'text-slate-400'}">${i+4}위</span>
-                    <span class="font-black ${isMe ? 'text-yellow-600' : 'text-slate-700'}">${r.nick}${isMe ? ' 👈 나' : ''}</span>
-                    <span class="text-xs text-slate-400 font-bold">정답 ${r.correct}개 · ${r.time}초</span>
-                    <span class="font-black text-yellow-500">${r.score}점</span>
-                </div>`;
-            }).join('') + `</div>`;
+    _playersCache=[]; _answersCache={};
+    if (fbReady && fbDb) {
+        fbDb.ref(FB_ROOT + '/players').remove();
+        fbDb.ref(FB_ROOT + '/answers').remove();
     } else {
-        restEl.innerHTML = '';
+        try{localStorage.removeItem('gq_players');localStorage.removeItem('gq_answers');}catch(e){}
     }
-}
-
-/* ════════════════════════════════════════
-   닉네임 투표
-════════════════════════════════════════ */
-function renderGridVote() {
-    const grid = document.getElementById('lucky-grid');
-    if (!nicknames.length) {
-        grid.innerHTML = `<div class="col-span-full text-center text-slate-300 font-bold py-6">참여자 닉네임이 없습니다.</div>`;
-        return;
-    }
-    grid.innerHTML = nicknames.sort((a, b) => b.v - a.v).map(n => `
-        <div class="nick-card bg-white p-4 rounded-2xl text-center flex flex-col items-center justify-center space-y-2">
-            <span class="text-[13px] font-black text-slate-800 break-keep">${n.n}</span>
-            <span class="text-[10px] text-yellow-500 font-bold">${n.v}표 획득</span>
-            <button onclick="vote('${n.n}')" class="w-full py-2 bg-slate-50 border border-yellow-100 rounded-lg text-[11px] font-bold text-yellow-500 hover:bg-yellow-400 hover:text-white transition">투표</button>
-        </div>
-    `).join('');
-    document.getElementById('vote-info').innerText = `가장 마음에 드는 닉네임을 선택하세요! (내 투표권: ${2 - voteCount}개 남음)`;
-}
-
-function vote(name) {
-    if (voteCount >= 2) return alert("최대 2개까지만 투표 가능합니다!");
-    const target = nicknames.find(x => x.n === name);
-    if (target) { target.v++; voteCount++; renderGridVote(); }
-}
-
-
-</script>
-</body>
-</html>        .gap-6 { gap: 1.5rem; }
-        .gap-8 { gap: 2rem; }
-        .space-y-2 > * + * { margin-top: .5rem; }
-        .space-y-3 > * + * { margin-top: .75rem; }
-        .space-y-4 > * + * { margin-top: 1rem; }
-        .space-y-6 > * + * { margin-top: 1.5rem; }
-        .space-y-8 > * + * { margin-top: 2rem; }
-        .grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-        .grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        .grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-        .col-span-full { grid-column: 1 / -1; }
-
-        @media (min-width: 640px) {
-            .sm\:flex-row { flex-direction: row; }
-            .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-        }
-        @media (min-width: 768px) {
-            .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .md\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .md\:col-span-2 { grid-column: span 2 / span 2; }
-        }
-        @media (min-width: 1024px) {
-            .lg\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-            .lg\:grid-cols-5 { grid-template-columns: repeat(5, minmax(0, 1fr)); }
-            .lg\:col-span-1 { grid-column: span 1 / span 1; }
-            .lg\:col-span-2 { grid-column: span 2 / span 2; }
-            .lg\:flex-row { flex-direction: row; }
-            .lg\:order-1 { order: 1; }
-            .lg\:order-2 { order: 2; }
-            .lg\:w-56 { width: 14rem; }
-            .lg\:flex { display: flex; }
-        }
-        .order-1 { order: 1; }
-        .order-2 { order: 2; }
-        .hidden { display: none !important; }
-
-        /* ── Typography ── */
-        .text-xs   { font-size: .75rem;  line-height: 1rem; }
-        .text-sm   { font-size: .875rem; line-height: 1.25rem; }
-        .text-base { font-size: 1rem;    line-height: 1.5rem; }
-        .text-lg   { font-size: 1.125rem;line-height: 1.75rem; }
-        .text-xl   { font-size: 1.25rem; line-height: 1.75rem; }
-        .text-2xl  { font-size: 1.5rem;  line-height: 2rem; }
-        .text-3xl  { font-size: 1.875rem;line-height: 2.25rem; }
-        .text-6xl  { font-size: 3.75rem; line-height: 1; }
-        .font-bold  { font-weight: 700; }
-        .font-black { font-weight: 900; }
-        .italic     { font-style: italic; }
-        .uppercase  { text-transform: uppercase; }
-        .tracking-widest { letter-spacing: .1em; }
-        .leading-tight   { line-height: 1.25; }
-        .leading-snug    { line-height: 1.375; }
-        .leading-relaxed { line-height: 1.625; }
-        .leading-normal  { line-height: 1.5; }
-        .text-center { text-align: center; }
-        .text-left   { text-align: left; }
-        .text-right  { text-align: right; }
-        .truncate    { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .break-keep  { word-break: keep-all; }
-        .underline          { text-decoration: underline; }
-        .underline-offset-4 { text-underline-offset: 4px; }
-        .min-h-\[60px\]  { min-height: 60px; }
-        .min-h-\[64px\]  { min-height: 64px; }
-        .min-h-\[80px\]  { min-height: 80px; }
-        .min-h-\[2rem\]  { min-height: 2rem; }
-        .min-h-\[1\.5rem\] { min-height: 1.5rem; }
-
-        /* ── Colors ── */
-        .text-white     { color: #fff; }
-        .text-spring    { color: #db2777; }
-        .text-slate-300 { color: #cbd5e1; }
-        .text-slate-400 { color: #94a3b8; }
-        .text-slate-500 { color: #64748b; }
-        .text-slate-700 { color: #334155; }
-        .text-slate-800 { color: #1e293b; }
-        .text-pink-200  { color: #fbcfe8; }
-        .text-pink-400  { color: #f472b6; }
-        .text-pink-500  { color: #ec4899; }
-        .text-pink-600  { color: #db2777; }
-        .text-blue-400  { color: #60a5fa; }
-        .text-blue-500  { color: #3b82f6; }
-        .text-green-500 { color: #22c55e; }
-        .text-yellow-500{ color: #eab308; }
-        .text-yellow-600{ color: #ca8a04; }
-        .text-emerald-500{color: #10b981; }
-        .text-red-400   { color: #f87171; }
-        .text-orange-400{ color: #fb923c; }
-        .text-\[11px\]  { font-size: 11px; }
-        .text-\[10px\]  { font-size: 10px; }
-        .text-\[13px\]  { font-size: 13px; }
-        .text-\[11px\]  { font-size: 11px; }
-
-        /* ── Backgrounds ── */
-        .bg-spring   { background-color: #db2777; }
-        .bg-white    { background-color: #fff; }
-        .bg-slate-50 { background-color: #f8fafc; }
-        .bg-slate-100{ background-color: #f1f5f9; }
-        .bg-slate-800{ background-color: #1e293b; }
-        .bg-slate-900{ background-color: #0f172a; }
-        .bg-pink-50  { background-color: #fdf2f8; }
-        .bg-pink-100 { background-color: #fce7f3; }
-        .bg-pink-900 { background-color: #831843; }
-        .bg-blue-50  { background-color: #eff6ff; }
-        .bg-green-50 { background-color: #f0fdf4; }
-        .bg-yellow-50 { background-color: #fefce8; }
-        .bg-yellow-100{ background-color: #fef9c3; }
-        .bg-yellow-400{ background-color: #facc15; }
-        .bg-purple-50 { background-color: #faf5ff; }
-        .bg-purple-100{ background-color: #f3e8ff; }
-
-        /* ── Borders ── */
-        .border   { border-width: 1px; border-style: solid; }
-        .border-2 { border-width: 2px; border-style: solid; }
-        .border-4 { border-width: 4px; border-style: solid; }
-        .border-b-8 { border-bottom-width: 8px; border-bottom-style: solid; }
-        .border-t   { border-top-width: 1px; border-top-style: solid; }
-        .border-dashed { border-style: dashed; }
-        .border-transparent  { border-color: transparent; }
-        .border-slate-100    { border-color: #f1f5f9; }
-        .border-slate-200    { border-color: #e2e8f0; }
-        .border-slate-700    { border-color: #334155; }
-        .border-pink-100     { border-color: #fce7f3; }
-        .border-pink-200     { border-color: #fbcfe8; }
-        .border-pink-300     { border-color: #f9a8d4; }
-        .border-pink-500     { border-color: #ec4899; }
-        .border-yellow-100   { border-color: #fef9c3; }
-        .border-yellow-200   { border-color: #fde68a; }
-        .border-yellow-300   { border-color: #fcd34d; }
-        .border-yellow-400   { border-color: #facc15; }
-        .border-purple-200   { border-color: #e9d5ff; }
-        .border-purple-300   { border-color: #d8b4fe; }
-        .border-e2e8f0       { border-color: #e2e8f0; }
-
-        /* ── Rounded ── */
-        .rounded    { border-radius: .25rem; }
-        .rounded-lg { border-radius: .5rem; }
-        .rounded-xl { border-radius: .75rem; }
-        .rounded-2xl{ border-radius: 1rem; }
-        .rounded-3xl{ border-radius: 1.5rem; }
-        .rounded-full{ border-radius: 9999px; }
-
-        /* ── Shadows ── */
-        .shadow-sm  { box-shadow: 0 1px 2px rgba(0,0,0,.05); }
-        .shadow-md  { box-shadow: 0 4px 6px -1px rgba(0,0,0,.1); }
-        .shadow-lg  { box-shadow: 0 10px 15px -3px rgba(0,0,0,.1); }
-        .shadow-xl  { box-shadow: 0 20px 25px -5px rgba(0,0,0,.1); }
-
-        /* ── Components ── */
-        .card { background: white; border-radius: 2rem; box-shadow: 0 15px 30px -10px rgba(219,39,119,.1); }
-        .chart-container { position: relative; height: 250px; width: 100%; }
-        .h-\[280px\] { height: 280px; }
-        .overflow-hidden { overflow: hidden; }
-        .relative { position: relative; }
-
-        .btn-choice { transition: all .2s; border: 2px solid #f1f5f9; cursor: pointer; min-height: 85px; display: flex; align-items: center; justify-content: center; padding: 1.2rem; font-weight: 700; border-radius: 1.2rem; line-height: 1.4; width: 100%; background: white; text-align: center; }
-        .btn-choice:hover { border-color: #f472b6; background-color: #fff1f2; transform: translateY(-2px); }
-        .rating-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #e2e8f0; transition: all .2s; font-weight: 800; display: flex; align-items: center; justify-content: center; background: white; }
-        .rating-btn:hover { border-color: #db2777; background: #db2777; color: white; }
-        .nick-card { border: 2px solid #f1f5f9; transition: all .2s; background: white; border-radius: 1rem; }
-        .nick-card:hover { border-color: #f472b6; transform: translateY(-3px); }
-        .part-btn { transition: all .25s; cursor: pointer; }
-        .part-btn:hover { transform: translateY(-4px); }
-
-        /* OX 버튼 */
-        .ox-btn { width: 130px; height: 130px; border-radius: 50%; font-size: 3.5rem; font-weight: 900; border: 4px solid transparent; transition: all .18s; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .ox-btn-o { background: #fff1f2; color: #db2777; border-color: #fda4af; }
-        .ox-btn-x { background: #eff6ff; color: #3b82f6; border-color: #93c5fd; }
-        .ox-btn-o:hover { background: #db2777; color: white; transform: scale(1.07); }
-        .ox-btn-x:hover { background: #3b82f6; color: white; transform: scale(1.07); }
-        .ox-btn.correct { background: #10b981 !important; color: white !important; border-color: #10b981 !important; transform: scale(1.1); }
-        .ox-btn.wrong   { background: #ef4444 !important; color: white !important; border-color: #ef4444 !important; }
-        .speed-timer-bar { height: 10px; border-radius: 9999px; background: linear-gradient(90deg,#db2777,#f472b6); transition: width .1s linear; }
-        .speed-feedback  { transition: all .3s; font-size: 1.4rem; font-weight: 900; min-height: 2rem; }
-
-        /* 인풋 */
-        .input-base { width: 100%; padding: 1rem; border: 2px solid #f1f5f9; border-radius: .75rem; outline: none; font-size: 1.125rem; font-weight: 700; }
-        .input-base:focus { border-color: #f9a8d4; }
-        .select-base { width: 100%; padding: 1rem; border: 2px solid #f1f5f9; border-radius: .75rem; outline: none; font-size: 1.125rem; font-weight: 700; background: white; }
-        .textarea-base { width: 100%; padding: 1rem; border: 2px solid #f1f5f9; border-radius: .75rem; outline: none; font-size: 1rem; font-weight: 600; resize: vertical; line-height: 1.6; min-height: 120px; }
-        .textarea-base:focus { border-color: #f9a8d4; }
-
-        /* VOC 카테고리 버튼 */
-        .voc-cat-btn { padding: .6rem 1.2rem; border: 2px solid #f1f5f9; border-radius: 9999px; font-size: .85rem; font-weight: 800; transition: all .2s; cursor: pointer; background: white; }
-        .voc-cat-btn:hover, .voc-cat-btn.active { border-color: #db2777; background: #db2777; color: white; }
-
-        /* Transition */
-        .transition { transition-property: color,background-color,border-color,transform,opacity,box-shadow; transition-duration: .15s; transition-timing-function: cubic-bezier(.4,0,.2,1); }
-        .hover\:scale-105:hover { transform: scale(1.05); }
-        .hover\:bg-yellow-500:hover { background-color: #eab308; }
-        .hover\:bg-slate-100:hover  { background-color: #f1f5f9; }
-        .hover\:bg-pink-500:hover   { background-color: #ec4899; }
-        .hover\:text-white:hover    { color: #fff; }
-        .hover\:text-pink-500:hover { color: #ec4899; }
-        .hover\:text-yellow-500:hover{ color: #eab308; }
-        .hover\:text-slate-500:hover { color: #64748b; }
-        .hover\:bg-yellow-400:hover  { background-color: #facc15; }
-
-        /* Opacity */
-        .opacity-60 { opacity: .6; }
-        .opacity-70 { opacity: .7; }
-        .opacity-75 { opacity: .75; }
-        .opacity-80 { opacity: .8; }
-
-        /* Misc */
-        .cursor-pointer { cursor: pointer; }
-        .resize-none    { resize: none; }
-        .px-2  { padding-left: .5rem; padding-right: .5rem; }
-        .px-3  { padding-left: .75rem; padding-right: .75rem; }
-        .px-4  { padding-left: 1rem; padding-right: 1rem; }
-        .px-5  { padding-left: 1.25rem; padding-right: 1.25rem; }
-        .px-6  { padding-left: 1.5rem; padding-right: 1.5rem; }
-        .px-8  { padding-left: 2rem; padding-right: 2rem; }
-        .px-12 { padding-left: 3rem; padding-right: 3rem; }
-        .px-16 { padding-left: 4rem; padding-right: 4rem; }
-        .py-1  { padding-top: .25rem; padding-bottom: .25rem; }
-        .py-2  { padding-top: .5rem; padding-bottom: .5rem; }
-        .py-3  { padding-top: .75rem; padding-bottom: .75rem; }
-        .py-5  { padding-top: 1.25rem; padding-bottom: 1.25rem; }
-        .py-6  { padding-top: 1.5rem; padding-bottom: 1.5rem; }
-        .py-10 { padding-top: 2.5rem; padding-bottom: 2.5rem; }
-        .bg-white\/20 { background-color: rgba(255,255,255,.2); }
-        .inline-block { display: inline-block; }
-        .block        { display: block; }
-        .w-12 { width: 3rem; }
-        .h-12 { height: 3rem; }
-        .text-\[10px\] { font-size: 10px; }
-        .text-\[11px\] { font-size: 11px; }
-        .text-\[13px\] { font-size: 13px; }
-        /* ── 반응형 보완 ── */
-        #lucky-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
-        @media (min-width: 640px) { #lucky-grid { grid-template-columns: repeat(3, minmax(0,1fr)); } }
-        @media (min-width: 1024px) { #lucky-grid { grid-template-columns: repeat(5, minmax(0,1fr)); } }
-        @media (max-width: 639px) {
-            /* 랜딩 */
-            .text-6xl { font-size: 2.6rem !important; }
-            /* 카드 패딩 축소 */
-            .card.p-10 { padding: 1.5rem !important; }
-            .card.p-8  { padding: 1.25rem !important; }
-            /* OX 버튼 */
-            .ox-btn { width: 90px !important; height: 90px !important; font-size: 2.4rem !important; }
-            /* 게임진행 제어버튼 4열→2열 */
-            #game-ctrl-grid { grid-template-columns: 1fr 1fr !important; }
-            /* 닉네임 투표 그리드 2열 고정 */
-            #lucky-grid { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
-            /* 파트 선택 카드 1열 */
-            .part-select-grid { grid-template-columns: 1fr !important; }
-            /* 대시보드 통계 카드 2열 */
-            .stat-grid-4 { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
-            /* 스피드 랭킹 상단 row 세로 */
-            .spd-rank-row { flex-direction: column !important; }
-            /* 관리자 탭 버튼 wrap */
-            .admin-tab-group { flex-wrap: wrap !important; }
-            /* 만족도/밸런스 차트 높이 축소 */
-            .chart-container { height: 200px !important; }
-            /* 큰 텍스트 축소 */
-            .text-3xl { font-size: 1.5rem !important; }
-            .text-2xl { font-size: 1.25rem !important; }
-        }
-        @media (max-width: 479px) {
-            .ox-btn { width: 78px !important; height: 78px !important; font-size: 2rem !important; }
-            .card.p-10 { padding: 1.1rem !important; }
-            #game-ctrl-grid { grid-template-columns: 1fr 1fr !important; }
-        }
-        /* 게임 진행 문제 영역 — 모바일 폰트 축소 */
-        @media (max-width: 639px) {
-            #game-preview p[style*="1.55rem"] { font-size: 1.1rem !important; }
-        }
-    </style>
-</head>
-<body class="min-h-screen pb-20">
-
-<!-- ══════════════════════════════════════
-     LANDING — 파트 선택 화면
-══════════════════════════════════════ -->
-<section id="page-landing" class="min-h-screen flex items-center justify-center p-6 bg-slate-50">
-    <div class="max-w-3xl w-full text-center">
-        <p class="text-slate-400 font-bold text-sm mb-3 tracking-widest uppercase">2026 · 구매팀 조직문화 진단</p>
-        <h1 class="text-6xl font-black text-slate-800 mb-4 animate__animated animate__fadeInDown">
-            구매의 <span class="text-spring italic">봄</span>
-        </h1>
-        <p class="text-slate-500 mb-12 font-bold">참여하고 싶은 파트를 선택하세요</p>
-
-        <!-- 파트 선택 카드 -->
-        <div class="part-select-grid grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto mb-10">
-            <!-- 파트 1 -->
-            <div class="part-btn card p-8 text-left cursor-pointer border-2 border-transparent hover:border-pink-300"
-                 onclick="showSection('step-intro')">
-                <div class="w-12 h-12 bg-pink-100 rounded-2xl flex items-center justify-center text-2xl mb-4">🌸</div>
-                <p class="text-xs font-black text-pink-500 uppercase tracking-widest mb-1">PART 1</p>
-                <h2 class="text-2xl font-black text-slate-800 mb-2">구매의 봄</h2>
-                <p class="text-sm text-slate-500 font-bold leading-relaxed">MBTI · 만족도 · 밸런스 게임<br>조직 문화를 함께 진단합니다</p>
-                <div class="mt-6 flex items-center gap-2 text-pink-500 font-black text-sm">
-                    시작하기 <span>→</span>
-                </div>
-            </div>
-            <!-- 파트 2 -->
-            <div class="part-btn card p-8 text-left cursor-pointer border-2 border-transparent hover:border-yellow-300"
-                 onclick="enterPart2()">
-                <div class="w-12 h-12 bg-yellow-100 rounded-2xl flex items-center justify-center text-2xl mb-4">⚡</div>
-                <p class="text-xs font-black text-yellow-500 uppercase tracking-widest mb-1">PART 2</p>
-                <h2 class="text-2xl font-black text-slate-800 mb-2">수료평가</h2>
-                <p class="text-sm text-slate-500 font-bold leading-relaxed">수료의 마지막 관문 · 행운의 닉네임 추첨<br>알고 있다고 생각했다면, 지금 증명하세요 😎</p>
-                <div class="mt-6 flex items-center gap-2 text-yellow-500 font-black text-sm">
-                    시작하기 <span>→</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 결과보기 버튼 -->
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-            <button onclick="renderDashboard1(true)"
-                class="px-8 py-3 bg-white text-slate-400 border-2 border-slate-200 font-black rounded-full shadow-sm hover:bg-slate-100 transition text-sm">
-                🌸 파트1 결과보기
-            </button>
-            <button onclick="renderDashboard2(true)"
-                class="px-8 py-3 bg-white text-slate-400 border-2 border-slate-200 font-black rounded-full shadow-sm hover:bg-slate-100 transition text-sm">
-                🎓 파트2 결과보기
-            </button>
-        </div>
-
-        <!-- 관리자 접속 버튼 -->
-        <div class="flex flex-col sm:flex-row gap-3 justify-center mt-16 pt-8" style="border-top:1px solid #f1f5f9">
-            <button onclick="openAdminLogin(1)"
-                style="background:none;border:none;color:#cbd5e1;font-size:.75rem;font-weight:700;cursor:pointer;padding:.4rem .8rem;border-radius:.5rem;transition:color .2s"
-                onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
-                🔒 파트1 관리자
-            </button>
-            <button onclick="openAdminLogin(2)"
-                style="background:none;border:none;color:#cbd5e1;font-size:.75rem;font-weight:700;cursor:pointer;padding:.4rem .8rem;border-radius:.5rem;transition:color .2s"
-                onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">
-                🔒 파트2 관리자
-            </button>
-        </div>
-    </div>
-</section>
-
-<!-- ══════════════════════════════════════
-     PART 1 — 닉네임/MBTI 입력
-══════════════════════════════════════ -->
-<div class="max-w-6xl mx-auto py-10 px-4">
-
-    <section id="step-intro" class="hidden card p-10 animate__animated animate__fadeIn">
-        <div class="text-center mb-2">
-            <span class="px-3 py-1 bg-pink-100 text-pink-500 rounded-full text-xs font-black uppercase tracking-widest">PART 1 · 구매의 봄</span>
-        </div>
-        <div class="text-center mb-8 mt-4">
-            <h2 class="text-2xl font-black mb-2">참여자 정보 입력</h2>
-            <p class="text-pink-500 font-bold text-sm italic">✍ 나를 잘 표현하는 닉네임을 적어주세요</p>
-        </div>
-        <div class="space-y-6 max-w-md mx-auto">
-            <div>
-                <label class="block text-sm font-bold text-slate-400 mb-2">닉네임</label>
-                <input type="text" id="user-nick" class="w-full p-4 border-2 border-slate-100 rounded-xl outline-none text-lg font-bold focus:border-pink-300" placeholder="닉네임을 입력하세요">
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-slate-400 mb-2">MBTI</label>
-                <select id="user-mbti" class="w-full p-4 border-2 border-slate-100 rounded-xl outline-none text-lg font-bold bg-white">
-                    <option value="">선택</option>
-                    <option>ISTJ</option><option>ISFJ</option><option>INFJ</option><option>INTJ</option>
-                    <option>ISTP</option><option>ISFP</option><option>INFP</option><option>INTP</option>
-                    <option>ESTP</option><option>ESFP</option><option>ENFP</option><option>ENTP</option>
-                    <option>ESTJ</option><option>ESFJ</option><option>ENFJ</option><option>ENTJ</option>
-                </select>
-            </div>
-            <button onclick="handleStart()" class="w-full bg-slate-900 text-white py-5 rounded-xl font-black text-lg shadow-lg">진단 시작</button>
-            <button onclick="goToLanding()" class="w-full text-slate-300 font-bold hover:text-slate-500 transition text-sm">← 처음으로</button>
-        </div>
-    </section>
-
-    <!-- ── 만족도 조사 ── -->
-    <section id="step-satisfaction" class="hidden card p-10 animate__animated animate__fadeIn">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="text-xl font-black text-slate-800">조직 만족도 조사</h2>
-            <span id="sat-progress" class="text-pink-500 font-bold">1 / 10</span>
-        </div>
-        <div class="text-center">
-            <h3 id="sat-question" class="text-2xl font-bold mb-8 min-h-[60px]"></h3>
-
-            <!-- 양 끝 레이블 -->
-            <div style="display:flex;justify-content:space-between;max-width:320px;margin:0 auto .4rem;padding:0 .2rem">
-                <span style="font-size:.72rem;font-weight:700;color:#94a3b8;text-align:center">전혀<br>그렇지 않다</span>
-                <span style="font-size:.72rem;font-weight:700;color:#94a3b8;text-align:center">매우<br>그렇다</span>
-            </div>
-
-            <!-- 점수 버튼 -->
-            <div style="display:flex;justify-content:center;align-items:center;gap:.5rem;margin-bottom:.4rem">
-                <button onclick="recordSat(1)" class="rating-btn" style="background:#fff1f2;border-color:#fda4af;color:#e11d48;font-weight:900">1</button>
-                <button onclick="recordSat(2)" class="rating-btn" style="background:#fff7ed;border-color:#fed7aa;color:#ea580c;font-weight:900">2</button>
-                <button onclick="recordSat(3)" class="rating-btn" style="background:#fefce8;border-color:#fde68a;color:#ca8a04;font-weight:900">3</button>
-                <button onclick="recordSat(4)" class="rating-btn" style="background:#f0fdf4;border-color:#86efac;color:#16a34a;font-weight:900">4</button>
-                <button onclick="recordSat(5)" class="rating-btn" style="background:#dcfce7;border-color:#4ade80;color:#15803d;font-weight:900">5</button>
-            </div>
-
-            <!-- 이모지 눈금 -->
-            <div style="display:flex;justify-content:space-between;max-width:320px;margin:.1rem auto 2rem;padding:0 .15rem">
-                <span style="font-size:.65rem;font-weight:800;color:#e11d48">😞</span>
-                <span style="font-size:.65rem;font-weight:800;color:#ea580c">😕</span>
-                <span style="font-size:.65rem;font-weight:800;color:#ca8a04">😐</span>
-                <span style="font-size:.65rem;font-weight:800;color:#16a34a">🙂</span>
-                <span style="font-size:.65rem;font-weight:800;color:#15803d">😄</span>
-            </div>
-
-            <div id="sat-back-container" class="flex justify-center hidden">
-                <button onclick="prevSat()" class="text-slate-300 font-bold hover:text-slate-500 transition underline underline-offset-4">← 이전 문항으로</button>
-            </div>
-        </div>
-    </section>
-
-    <!-- ── 밸런스 게임 ── -->
-    <section id="step-balance" class="hidden card p-10 animate__animated animate__fadeIn text-center">
-        <span id="bal-category" class="px-4 py-1 bg-slate-100 rounded-full text-xs font-black text-slate-500 uppercase italic">Category</span>
-        <h2 id="bal-question" class="text-2xl font-black mt-6 mb-10 min-h-[80px] break-keep"></h2>
-        <div class="grid grid-cols-1 gap-4 max-w-2xl mx-auto">
-            <button onclick="recordBal('A')" id="btn-a" class="btn-choice"></button>
-            <div class="text-pink-100 font-black text-xl italic">VS</div>
-            <button onclick="recordBal('B')" id="btn-b" class="btn-choice"></button>
-        </div>
-        <p id="bal-count" class="mt-8 text-slate-300 font-bold italic mb-6">1 / 35</p>
-        <div class="flex justify-center">
-            <button onclick="prevBal()" class="text-slate-300 font-bold hover:text-slate-500 transition underline underline-offset-4">← 이전 문항으로</button>
-        </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         PART 1 대시보드
-    ══════════════════════════════════════ -->
-    <section id="step-dashboard1" class="hidden space-y-8 animate__animated animate__fadeIn">
-
-        <!-- 헤더 -->
-        <div class="card p-10 text-center border-b-8 border-pink-500">
-            <span class="px-3 py-1 bg-pink-100 text-pink-500 rounded-full text-xs font-black uppercase tracking-widest">PART 1</span>
-            <h2 class="text-3xl font-black text-slate-800 italic mt-3">구매의 봄 · Collective Report</h2>
-            <p class="text-slate-400 mt-2 font-bold italic">실시간 참여 데이터 기반 심층 분석</p>
-            <div class="stat-grid-4 grid grid-cols-2 gap-4 mt-6 max-w-lg mx-auto" style="grid-template-columns:repeat(4,minmax(0,1fr))">
-                <div class="bg-pink-50 rounded-2xl p-4">
-                    <p class="text-[11px] font-bold text-slate-400 mb-1">MBTI 참여</p>
-                    <p class="text-2xl font-black text-spring" id="stat-mbti-count">0<span class="text-sm font-bold">명</span></p>
-                </div>
-                <div class="bg-blue-50 rounded-2xl p-4">
-                    <p class="text-[11px] font-bold text-slate-400 mb-1">만족도 참여</p>
-                    <p class="text-2xl font-black text-blue-500" id="stat-sat-count">0<span class="text-sm font-bold">명</span></p>
-                </div>
-                <div class="bg-green-50 rounded-2xl p-4">
-                    <p class="text-[11px] font-bold text-slate-400 mb-1">밸런스 참여</p>
-                    <p class="text-2xl font-black text-green-500" id="stat-bal-count">0<span class="text-sm font-bold">명</span></p>
-                </div>
-                <div class="rounded-2xl p-4" style="background:#faf5ff">
-                    <p class="text-[11px] font-bold text-slate-400 mb-1">VOC 접수</p>
-                    <p class="text-2xl font-black" style="color:#a855f7" id="stat-voc-count">0<span class="text-sm font-bold">건</span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- MBTI -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="card p-8">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-black flex items-center"><span class="w-2 h-6 bg-pink-500 mr-2 rounded-full"></span>참여자 MBTI 분포</h3>
-                    <span class="text-xs bg-slate-100 px-2 py-1 rounded text-slate-500 font-bold">전체 분포도</span>
-                </div>
-                <div class="chart-container"><canvas id="chart-mbti"></canvas></div>
-            </div>
-            <div class="card p-8 bg-slate-900 text-white">
-                <h3 class="text-lg font-black mb-4 text-pink-400 italic">AI Collective MBTI & Culture Analysis</h3>
-                <div id="ana-mbti-content" class="space-y-4 text-xs leading-relaxed text-slate-300">
-                    <p class="text-slate-500 italic">아직 참여 데이터가 없습니다.<br>참여자가 응답을 완료하면 AI 분석 결과가 이곳에 표시됩니다.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 만족도 -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="card p-8 order-2 lg:order-1 bg-slate-900 text-white">
-                <h3 class="text-lg font-black mb-4 text-pink-400 italic">AI Collective Satisfaction Analysis</h3>
-                <div id="ana-sat-content" class="space-y-4 text-xs leading-relaxed text-slate-300">
-                    <p class="text-slate-500 italic">아직 참여 데이터가 없습니다.<br>참여자가 응답을 완료하면 AI 분석 결과가 이곳에 표시됩니다.</p>
-                </div>
-            </div>
-            <div class="card p-8 order-1 lg:order-2">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-black flex items-center"><span class="w-2 h-6 bg-blue-500 mr-2 rounded-full"></span>항목별 평균 만족도</h3>
-                </div>
-                <div class="chart-container"><canvas id="chart-sat"></canvas></div>
-            </div>
-        </div>
-
-        <!-- 밸런스 게임 -->
-        <div class="card p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black flex items-center"><span class="w-2 h-6 bg-green-500 mr-2 rounded-full"></span>밸런스 게임 5차원 입체 분석</h3>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-1">
-                    <div class="chart-container h-[280px]"><canvas id="chart-bal-radar"></canvas></div>
-                </div>
-                <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-3" id="bal-insight-grid">
-                    <div class="md:col-span-2 p-6 bg-slate-800 rounded-2xl text-slate-500 text-xs text-center italic">
-                        아직 참여 데이터가 없습니다.<br>참여자가 응답을 완료하면 분석 결과가 이곳에 표시됩니다.
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- VOC 현황 -->
-        <div class="card p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-black flex items-center"><span class="w-2 h-6 bg-purple-500 mr-2 rounded-full" style="background:#a855f7"></span>💬 VOC 접수 현황</h3>
-            </div>
-            <div id="voc-dashboard" class="grid grid-cols-1 gap-4">
-                <p class="text-slate-400 text-sm font-bold italic text-center py-6">아직 접수된 VOC가 없습니다.</p>
-            </div>
-        </div>
-
-        <button onclick="goToLanding()" class="w-full bg-white border-2 border-slate-100 text-slate-400 py-6 rounded-3xl font-black text-xl hover:text-pink-500 transition shadow-sm">← 처음으로</button>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         VOC 접수 (밸런스 완료 후)
-    ══════════════════════════════════════ -->
-    <section id="step-voc" class="hidden card p-10 animate__animated animate__fadeIn">
-        <div class="text-center mb-2">
-            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-widest" style="background:#f3e8ff;color:#9333ea">PART 1 · VOC</span>
-        </div>
-        <div class="text-center mt-4 mb-8">
-            <h2 class="text-2xl font-black mb-2">💬 Voice of Customer</h2>
-            <p class="text-slate-500 font-bold text-sm">조직 개선을 위한 소중한 의견을 남겨주세요.<br><span class="text-slate-400">작성하지 않아도 괜찮아요 — 건너뛸 수 있습니다.</span></p>
-        </div>
-        <div class="space-y-6 max-w-lg mx-auto">
-            <div>
-                <label class="block text-sm font-bold text-slate-400 mb-3">카테고리 선택</label>
-                <div class="flex flex-wrap gap-2">
-                    <button onclick="selectVocCat('소통')" class="voc-cat-btn" id="voc-cat-소통">💬 소통</button>
-                    <button onclick="selectVocCat('업무')" class="voc-cat-btn" id="voc-cat-업무">🛠 업무</button>
-                    <button onclick="selectVocCat('조직')" class="voc-cat-btn" id="voc-cat-조직">🏛 조직</button>
-                    <button onclick="selectVocCat('결정')" class="voc-cat-btn" id="voc-cat-결정">⚖️ 결정</button>
-                    <button onclick="selectVocCat('성장')" class="voc-cat-btn" id="voc-cat-성장">🌱 성장</button>
-                </div>
-            </div>
-            <div>
-                <label class="block text-sm font-bold text-slate-400 mb-2">의견 내용</label>
-                <textarea id="voc-text" class="textarea-base" placeholder="자유롭게 의견을 작성해주세요..."></textarea>
-            </div>
-            <button onclick="submitVoc()" class="w-full text-white py-5 rounded-xl font-black text-lg shadow-lg transition" style="background:#db2777">의견 제출하기</button>
-            <button onclick="skipVoc()" class="w-full text-slate-300 font-bold hover:text-slate-500 transition text-sm py-2">건너뛰기 → 결과 바로 보기</button>
-        </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         PART 2 — 닉네임 입력
-    ══════════════════════════════════════ -->
-    <section id="step-intro2" class="hidden card p-10 animate__animated animate__fadeIn">
-        <div class="text-center mb-2">
-            <span class="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-xs font-black uppercase tracking-widest">PART 2 · 수료평가</span>
-        </div>
-        <div class="text-center mb-8 mt-4">
-            <h2 class="text-2xl font-black mb-2">닉네임을 입력하세요</h2>
-            <p class="text-yellow-500 font-bold text-sm italic">⚡ 랭킹에 표시될 이름이에요!</p>
-        </div>
-        <div class="space-y-6 max-w-md mx-auto">
-            <div>
-                <label class="block text-sm font-bold text-slate-400 mb-2">닉네임</label>
-                <input type="text" id="user-nick2" class="w-full p-4 border-2 border-slate-100 rounded-xl outline-none text-lg font-bold focus:border-yellow-300" placeholder="닉네임을 입력하세요">
-            </div>
-            <button onclick="handleStart2()" class="w-full bg-yellow-400 text-white py-5 rounded-xl font-black text-lg shadow-lg hover:bg-yellow-500 transition">수료평가 입장!</button>
-            <button onclick="goToLanding()" class="w-full text-slate-300 font-bold hover:text-slate-500 transition text-sm">← 처음으로</button>
-        </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         PART 2 — 수료평가
-    ══════════════════════════════════════ -->
-    <section id="step-speed" class="hidden card p-10 animate__animated animate__fadeIn">
-        <!-- 인트로/대기 -->
-        <div id="speed-intro" class="text-center space-y-6">
-            <div>
-                <span class="px-4 py-1 bg-yellow-100 rounded-full text-xs font-black text-yellow-600 uppercase italic">수료평가</span>
-                <h2 class="text-3xl font-black mt-4 mb-2">🎓 수료평가</h2>
-                <p class="text-slate-500 font-bold">지금까지 배운 내용을 떠올리며 침착하게 풀어주세요 🧘</p>
-            </div>
-
-            <!-- 시작 전 대기 (관리자가 퀴즈시작 누르기 전) -->
-            <div id="player-before-start" style="background:linear-gradient(135deg,#fef9c3,#fefce8);border-radius:1.5rem;padding:2rem;max-width:24rem;margin:0 auto;border:2px solid #fde68a">
-                <div style="font-size:2.5rem;margin-bottom:.75rem">⏳</div>
-                <p style="font-weight:900;font-size:1.05rem;color:#92400e">관리자의 퀴즈 시작을 기다리는 중...</p>
-                <p style="font-size:.8rem;color:#a16207;font-weight:700;margin-top:.5rem">관리자가 시작 버튼을 누르면 자동으로 시작됩니다</p>
-            </div>
-
-            <!-- 퀴즈 시작됨 대기 (문제 공개 전) -->
-            <div id="player-quiz-started" style="display:none;background:linear-gradient(135deg,#dcfce7,#f0fdf4);border-radius:1.5rem;padding:2rem;max-width:24rem;margin:0 auto;border:2px solid #86efac">
-                <div style="font-size:2.5rem;margin-bottom:.75rem">🎯</div>
-                <p style="font-weight:900;font-size:1.05rem;color:#166534">퀴즈가 시작되었습니다!</p>
-                <p style="font-size:.8rem;color:#15803d;font-weight:700;margin-top:.5rem">첫 번째 문제가 곧 공개됩니다. 집중하세요!</p>
-            </div>
-
-            <div class="bg-slate-50 rounded-2xl p-5 max-w-sm mx-auto text-left space-y-2 text-sm font-bold text-slate-500">
-                <p>📋 수료평가 문제는 담당자가 직접 출제합니다</p>
-                <p>🏆 정답자 중 가장 빠른 분께는 특별한 영광이 주어집니다</p>
-                <p>⏱ 문제당 제한시간 <strong class="text-slate-800">10초</strong> — 아는 만큼 빠릅니다</p>
-            </div>
-            <button onclick="goToLanding()" style="background:none;border:none;color:#cbd5e1;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:.5rem;padding:.4rem .8rem;border-radius:.5rem;transition:color .2s" onmouseover="this.style.color='#94a3b8'" onmouseout="this.style.color='#cbd5e1'">← 처음으로</button>
-        </div>
-
-        <!-- 퀴즈 진행 -->
-        <div id="speed-quiz" class="hidden">
-            <div class="flex justify-between items-center mb-4">
-                <span id="spd-progress" class="text-yellow-500 font-black text-lg">1 / ?</span>
-                <span id="spd-score-live" class="text-slate-400 font-bold text-sm">점수: 0점</span>
-            </div>
-            <div class="w-full bg-slate-100 rounded-full mb-6 overflow-hidden">
-                <div id="spd-timer-bar" class="speed-timer-bar" style="width:100%"></div>
-            </div>
-            <div class="text-center space-y-8">
-                <div>
-                    <span id="spd-tag" class="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-xs font-black">주제태그</span>
-                    <h3 id="spd-question" class="text-xl font-black mt-4 mb-2 min-h-[64px] break-keep leading-snug"></h3>
-                </div>
-                <!-- 동적으로 보기 렌더 -->
-                <div id="spd-choices" class="flex justify-center gap-8 flex-wrap"></div>
-                <div id="spd-feedback" class="speed-feedback text-slate-300">—</div>
-                <div id="spd-desc" class="text-sm text-slate-400 font-bold min-h-[1.5rem] max-w-lg mx-auto leading-relaxed hidden"></div>
-                <!-- 관리자가 정답 공개 전 대기 메시지 -->
-                <div id="spd-wait-next" class="hidden" style="background:#f8fafc;border-radius:1rem;padding:1rem;font-size:.9rem;font-weight:700;color:#94a3b8">
-                    ⏳ 관리자가 다음 문제를 진행할 때까지 대기 중...
-                </div>
-            </div>
-        </div>
-
-        <!-- 결과 -->
-        <div id="speed-result" class="hidden text-center space-y-6">
-            <h2 class="text-3xl font-black">🎉 퀴즈 완료!</h2>
-            <div class="grid grid-cols-3 gap-4 max-w-sm mx-auto">
-                <div class="bg-slate-50 rounded-2xl p-4">
-                    <p class="text-xs text-slate-400 font-bold">점수</p>
-                    <p id="res-score" class="text-3xl font-black text-yellow-500">0점</p>
-                </div>
-                <div class="bg-slate-50 rounded-2xl p-4">
-                    <p class="text-xs text-slate-400 font-bold">정답</p>
-                    <p id="res-correct" class="text-3xl font-black text-slate-800">0개</p>
-                </div>
-                <div class="bg-slate-50 rounded-2xl p-4">
-                    <p class="text-xs text-slate-400 font-bold">풀이시간</p>
-                    <p id="res-time" class="text-3xl font-black text-slate-800">0초</p>
-                </div>
-            </div>
-            <button onclick="renderDashboard2()" class="px-16 py-5 bg-slate-900 text-white text-xl font-black rounded-full shadow-xl hover:scale-105 transition">결과 대시보드 보기</button>
-        </div>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         PART 2 대시보드 — 내 결과
-    ══════════════════════════════════════ -->
-    <section id="step-dashboard2" class="hidden space-y-6 animate__animated animate__fadeIn">
-
-        <!-- 헤더 -->
-        <div class="card p-10 text-center border-b-8 border-yellow-400">
-            <span class="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-xs font-black uppercase tracking-widest">PART 2 · 수료평가</span>
-            <h2 class="text-3xl font-black text-slate-800 italic mt-3">🎓 나의 수료평가 결과</h2>
-            <p class="text-slate-400 mt-2 font-bold">수고하셨습니다! 아래에서 내 결과를 확인하세요.</p>
-        </div>
-
-        <!-- 내 결과 카드 -->
-        <div class="card p-10">
-            <div id="my-result-board" class="text-center space-y-8">
-                <p class="text-slate-300 font-bold">게임을 완료하면 결과가 표시됩니다.</p>
-            </div>
-        </div>
-
-        <button onclick="goToLanding()" class="w-full bg-white border-2 border-slate-100 text-slate-400 py-6 rounded-3xl font-black text-xl hover:text-yellow-500 transition shadow-sm">← 처음으로</button>
-    </section>
-    <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center">
-        <div style="background:white;border-radius:1.5rem;padding:2.5rem;width:min(90vw,380px);box-shadow:0 25px 50px -12px rgba(0,0,0,.35);text-align:center">
-            <div style="font-size:2rem;margin-bottom:.5rem">🔒</div>
-            <h3 style="font-size:1.25rem;font-weight:900;color:#1e293b;margin-bottom:.25rem">관리자 인증</h3>
-            <p style="font-size:.8rem;color:#94a3b8;font-weight:700;margin-bottom:1.5rem">비밀번호를 입력하세요</p>
-            <input type="password" id="admin-pw-input"
-                style="width:100%;padding:.9rem 1rem;border:2px solid #f1f5f9;border-radius:.75rem;font-size:1rem;font-weight:700;outline:none;text-align:center;margin-bottom:1rem"
-                placeholder="비밀번호"
-                onfocus="this.style.borderColor='#db2777'"
-                onblur="this.style.borderColor='#f1f5f9'"
-                onkeydown="if(event.key==='Enter')confirmAdminLogin()">
-            <p id="admin-pw-error" style="font-size:.8rem;color:#ef4444;font-weight:700;min-height:1.2rem;margin-bottom:.75rem"></p>
-            <div style="display:flex;gap:.75rem">
-                <button onclick="closeAdminModal()"
-                    style="flex:1;padding:.85rem;border:2px solid #f1f5f9;border-radius:.75rem;font-weight:900;font-size:.9rem;color:#94a3b8;cursor:pointer;transition:background .2s"
-                    onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">취소</button>
-                <button onclick="confirmAdminLogin()"
-                    style="flex:1;padding:.85rem;background:#1e293b;border:none;border-radius:.75rem;font-weight:900;font-size:.9rem;color:white;cursor:pointer;transition:opacity .2s"
-                    onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">입장</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ══════════════════════════════════════
-         관리자 화면 — PART 1
-    ══════════════════════════════════════ -->
-    <section id="step-admin1" class="hidden space-y-8 animate__animated animate__fadeIn">
-
-        <!-- 헤더 -->
-        <div class="card p-10 text-center" style="border-bottom:8px solid #1e293b">
-            <span style="background:#1e293b;color:white;padding:.25rem .9rem;border-radius:9999px;font-size:.7rem;font-weight:900;letter-spacing:.1em">ADMIN · PART 1</span>
-            <h2 class="text-3xl font-black text-slate-800 italic mt-3">🛡 파트1 관리자 대시보드</h2>
-            <p class="text-slate-400 mt-2 font-bold italic">MBTI · 만족도 · 밸런스 · VOC 전체 데이터 관리</p>
-            <!-- 통계 카드 -->
-            <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.75rem;max-width:36rem;margin:1.5rem auto 0">
-                <div style="background:#fdf2f8;border-radius:1rem;padding:1rem">
-                    <p style="font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">MBTI</p>
-                    <p style="font-size:1.5rem;font-weight:900;color:#db2777" id="adm1-mbti-cnt">0<span style="font-size:.75rem">명</span></p>
-                </div>
-                <div style="background:#eff6ff;border-radius:1rem;padding:1rem">
-                    <p style="font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">만족도</p>
-                    <p style="font-size:1.5rem;font-weight:900;color:#3b82f6" id="adm1-sat-cnt">0<span style="font-size:.75rem">명</span></p>
-                </div>
-                <div style="background:#f0fdf4;border-radius:1rem;padding:1rem">
-                    <p style="font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">밸런스</p>
-                    <p style="font-size:1.5rem;font-weight:900;color:#22c55e" id="adm1-bal-cnt">0<span style="font-size:.75rem">명</span></p>
-                </div>
-                <div style="background:#faf5ff;border-radius:1rem;padding:1rem">
-                    <p style="font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">VOC</p>
-                    <p style="font-size:1.5rem;font-weight:900;color:#a855f7" id="adm1-voc-cnt">0<span style="font-size:.75rem">건</span></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- 관리 기능 -->
-        <div class="card p-8">
-            <h3 class="text-xl font-black mb-6 flex items-center gap-2"><span style="width:.4rem;height:1.5rem;background:#1e293b;border-radius:9999px;display:inline-block"></span>데이터 관리</h3>
-            <div style="display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:1rem">
-                <!-- CSV 다운로드 -->
-                <div style="background:#f8fafc;border-radius:1.25rem;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
-                    <div>
-                        <p style="font-weight:900;font-size:.95rem;color:#1e293b">⬇ 전체 데이터 CSV 다운로드</p>
-                        <p style="font-size:.78rem;color:#94a3b8;font-weight:700;margin-top:.2rem">MBTI · 만족도 · 밸런스 · VOC 전체 포함</p>
-                    </div>
-                    <button onclick="adminDownloadAll1()"
-                        style="background:#1e293b;color:white;padding:.6rem 1.4rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:none;cursor:pointer;white-space:nowrap"
-                        onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">CSV 다운로드</button>
-                </div>
-                <!-- VOC CSV -->
-                <div style="background:#f8fafc;border-radius:1.25rem;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
-                    <div>
-                        <p style="font-weight:900;font-size:.95rem;color:#1e293b">📋 VOC 데이터 CSV 다운로드</p>
-                        <p style="font-size:.78rem;color:#94a3b8;font-weight:700;margin-top:.2rem">닉네임·카테고리·내용·시간 포함</p>
-                    </div>
-                    <button onclick="downloadVoc()"
-                        style="background:#a855f7;color:white;padding:.6rem 1.4rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:none;cursor:pointer;white-space:nowrap"
-                        onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">CSV 다운로드</button>
-                </div>
-                <!-- 일부 삭제 -->
-                <div style="background:#f8fafc;border-radius:1.25rem;padding:1.25rem">
-                    <p style="font-weight:900;font-size:.95rem;color:#1e293b;margin-bottom:.3rem">🗑 참여자 데이터 개별 삭제</p>
-                    <p style="font-size:.78rem;color:#94a3b8;font-weight:700;margin-bottom:.75rem">삭제할 참여자 닉네임을 선택하세요</p>
-                    <div id="adm1-delete-list" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
-                        <p style="font-size:.8rem;color:#cbd5e1;font-weight:700">참여자 데이터가 없습니다.</p>
-                    </div>
-                    <p style="font-size:.72rem;color:#f87171;font-weight:700">⚠ 삭제 후 복구할 수 없습니다</p>
-                </div>
-                <!-- 전체 리셋 -->
-                <div style="background:#fff1f2;border-radius:1.25rem;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;border:2px solid #fecdd3">
-                    <div>
-                        <p style="font-weight:900;font-size:.95rem;color:#e11d48">⚠ 전체 데이터 초기화 (리셋)</p>
-                        <p style="font-size:.78rem;color:#fb7185;font-weight:700;margin-top:.2rem">파트1의 모든 데이터가 삭제됩니다</p>
-                    </div>
-                    <button onclick="adminReset1()"
-                        style="background:#e11d48;color:white;padding:.6rem 1.4rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:none;cursor:pointer;white-space:nowrap"
-                        onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">전체 리셋</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- VOC 전체 목록 (관리자용 - 닉네임·시간 포함) -->
-        <div class="card p-8">
-            <h3 class="text-xl font-black mb-6 flex items-center gap-2"><span style="width:.4rem;height:1.5rem;background:#a855f7;border-radius:9999px;display:inline-block"></span>💬 VOC 전체 내역 (관리자)</h3>
-            <div id="adm1-voc-list">
-                <p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">접수된 VOC가 없습니다.</p>
-            </div>
-        </div>
-
-        <button onclick="goToLanding()" class="w-full bg-white border-2 border-slate-100 text-slate-400 py-6 rounded-3xl font-black text-xl hover:text-pink-500 transition shadow-sm">← 처음으로</button>
-    </section>
-
-    <!-- ══════════════════════════════════════
-         관리자 화면 — PART 2
-    ══════════════════════════════════════ -->
-    <section id="step-admin2" class="hidden space-y-8 animate__animated animate__fadeIn">
-
-        <!-- 헤더 -->
-        <div class="card p-10 text-center" style="border-bottom:8px solid #1e293b">
-            <span style="background:#1e293b;color:white;padding:.25rem .9rem;border-radius:9999px;font-size:.7rem;font-weight:900;letter-spacing:.1em">ADMIN · PART 2</span>
-            <h2 class="text-3xl font-black text-slate-800 italic mt-3">🛡 수료평가 관리자 대시보드</h2>
-            <p class="text-slate-400 mt-2 font-bold italic">문제 만들기 · 게임 진행 · 데이터 관리</p>
-            <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.75rem;max-width:18rem;margin:1.5rem auto 0">
-                <div style="background:#fefce8;border-radius:1rem;padding:1rem">
-                    <p style="font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">스피드 참여</p>
-                    <p style="font-size:1.5rem;font-weight:900;color:#eab308" id="adm2-spd-cnt">0<span style="font-size:.75rem">명</span></p>
-                </div>
-                <div style="background:#fdf2f8;border-radius:1rem;padding:1rem">
-                    <p style="font-size:.7rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">닉네임 투표</p>
-                    <p style="font-size:1.5rem;font-weight:900;color:#db2777" id="adm2-vote-cnt">0<span style="font-size:.75rem">표</span></p>
-                </div>
-            </div>
-            <!-- 탭 -->
-            <div class="admin-tab-group" style="display:flex;justify-content:center;gap:.5rem;margin-top:1.5rem">
-                <button onclick="switchAdminTab('make')" id="tab-make"
-                    style="padding:.6rem 1.4rem;border-radius:9999px;font-size:.85rem;font-weight:900;border:2px solid #1e293b;background:#1e293b;color:white;cursor:pointer;transition:all .2s">
-                    ✏️ 문제 만들기
-                </button>
-                <button onclick="switchAdminTab('run')" id="tab-run"
-                    style="padding:.6rem 1.4rem;border-radius:9999px;font-size:.85rem;font-weight:900;border:2px solid #e2e8f0;background:white;color:#94a3b8;cursor:pointer;transition:all .2s">
-                    🎮 게임 진행
-                </button>
-                <button onclick="switchAdminTab('data')" id="tab-data"
-                    style="padding:.6rem 1.4rem;border-radius:9999px;font-size:.85rem;font-weight:900;border:2px solid #e2e8f0;background:white;color:#94a3b8;cursor:pointer;transition:all .2s">
-                    📊 데이터 관리
-                </button>
-            </div>
-        </div>
-
-        <!-- ── 탭: 문제 만들기 ── -->
-        <div id="panel-make" class="space-y-6">
-            <div class="card p-8">
-                <h3 class="text-xl font-black mb-6" style="display:flex;align-items:center;gap:.5rem">
-                    <span style="width:.4rem;height:1.5rem;background:#eab308;border-radius:9999px;display:inline-block"></span>✏️ 새 문제 추가
-                </h3>
-                <div class="space-y-4 max-w-2xl">
-                    <!-- 문제 유형 -->
-                    <div>
-                        <label style="display:block;font-size:.8rem;font-weight:700;color:#94a3b8;margin-bottom:.5rem">문제 유형</label>
-                        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-                            <button onclick="setQType('ox')" id="qtype-ox"
-                                style="padding:.45rem 1rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:2px solid #1e293b;background:#1e293b;color:white;cursor:pointer">O/X형</button>
-                            <button onclick="setQType('multi')" id="qtype-multi"
-                                style="padding:.45rem 1rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:2px solid #e2e8f0;background:white;color:#94a3b8;cursor:pointer">다지선다형</button>
-                            <button onclick="setQType('short')" id="qtype-short"
-                                style="padding:.45rem 1rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:2px solid #e2e8f0;background:white;color:#94a3b8;cursor:pointer">주관식</button>
-                        </div>
-                    </div>
-                    <!-- 태그 -->
-                    <div>
-                        <label style="display:block;font-size:.8rem;font-weight:700;color:#94a3b8;margin-bottom:.5rem">태그 (선택)</label>
-                        <input id="q-tag" type="text" placeholder="예: AI · 구매"
-                            style="width:100%;padding:.75rem 1rem;border:2px solid #f1f5f9;border-radius:.75rem;font-size:.9rem;font-weight:600;outline:none"
-                            onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'">
-                    </div>
-                    <!-- 문제 텍스트 -->
-                    <div>
-                        <label style="display:block;font-size:.8rem;font-weight:700;color:#94a3b8;margin-bottom:.5rem">문제</label>
-                        <textarea id="q-text" rows="3" placeholder="문제를 입력하세요"
-                            style="width:100%;padding:.75rem 1rem;border:2px solid #f1f5f9;border-radius:.75rem;font-size:.9rem;font-weight:600;outline:none;resize:vertical;line-height:1.6"
-                            onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'"></textarea>
-                    </div>
-                    <!-- 보기 (다지선다) -->
-                    <div id="choices-area" style="display:none">
-                        <label style="display:block;font-size:.8rem;font-weight:700;color:#94a3b8;margin-bottom:.5rem">보기 (최대 5개)</label>
-                        <div id="choices-list" class="space-y-2">
-                            <div style="display:flex;gap:.5rem;align-items:center">
-                                <span style="font-size:.8rem;font-weight:900;color:#94a3b8;width:1.2rem">①</span>
-                                <input type="text" class="choice-input" placeholder="보기 1"
-                                    style="flex:1;padding:.6rem .9rem;border:2px solid #f1f5f9;border-radius:.6rem;font-size:.85rem;font-weight:600;outline:none"
-                                    onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'">
-                            </div>
-                            <div style="display:flex;gap:.5rem;align-items:center">
-                                <span style="font-size:.8rem;font-weight:900;color:#94a3b8;width:1.2rem">②</span>
-                                <input type="text" class="choice-input" placeholder="보기 2"
-                                    style="flex:1;padding:.6rem .9rem;border:2px solid #f1f5f9;border-radius:.6rem;font-size:.85rem;font-weight:600;outline:none"
-                                    onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'">
-                            </div>
-                            <div style="display:flex;gap:.5rem;align-items:center">
-                                <span style="font-size:.8rem;font-weight:900;color:#94a3b8;width:1.2rem">③</span>
-                                <input type="text" class="choice-input" placeholder="보기 3 (선택)"
-                                    style="flex:1;padding:.6rem .9rem;border:2px solid #f1f5f9;border-radius:.6rem;font-size:.85rem;font-weight:600;outline:none"
-                                    onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'">
-                            </div>
-                            <div style="display:flex;gap:.5rem;align-items:center">
-                                <span style="font-size:.8rem;font-weight:900;color:#94a3b8;width:1.2rem">④</span>
-                                <input type="text" class="choice-input" placeholder="보기 4 (선택)"
-                                    style="flex:1;padding:.6rem .9rem;border:2px solid #f1f5f9;border-radius:.6rem;font-size:.85rem;font-weight:600;outline:none"
-                                    onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'">
-                            </div>
-                            <div style="display:flex;gap:.5rem;align-items:center">
-                                <span style="font-size:.8rem;font-weight:900;color:#94a3b8;width:1.2rem">⑤</span>
-                                <input type="text" class="choice-input" placeholder="보기 5 (선택)"
-                                    style="flex:1;padding:.6rem .9fn;border:2px solid #f1f5f9;border-radius:.6rem;font-size:.85rem;font-weight:600;outline:none"
-                                    onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'">
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 정답 -->
-                    <div>
-                        <label style="display:block;font-size:.8rem;font-weight:700;color:#94a3b8;margin-bottom:.5rem">정답</label>
-                        <div id="ans-ox" style="display:flex;gap:.5rem">
-                            <button onclick="setAns('O')" id="ans-btn-O"
-                                style="flex:1;padding:.75rem;border:2px solid #e2e8f0;border-radius:.75rem;font-size:1.2rem;font-weight:900;cursor:pointer;transition:all .2s;background:white">⭕ O</button>
-                            <button onclick="setAns('X')" id="ans-btn-X"
-                                style="flex:1;padding:.75rem;border:2px solid #e2e8f0;border-radius:.75rem;font-size:1.2rem;font-weight:900;cursor:pointer;transition:all .2s;background:white">❌ X</button>
-                        </div>
-                        <input id="ans-text" type="text" placeholder="정답을 입력하세요 (다지선다: 번호 또는 텍스트, 주관식: 정답 텍스트)" style="display:none;width:100%;padding:.75rem 1rem;border:2px solid #f1f5f9;border-radius:.75rem;font-size:.9rem;font-weight:600;outline:none"
-                            onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'">
-                    </div>
-                    <!-- 해설 -->
-                    <div>
-                        <label style="display:block;font-size:.8rem;font-weight:700;color:#94a3b8;margin-bottom:.5rem">해설 (선택)</label>
-                        <textarea id="q-desc" rows="2" placeholder="정답 해설을 입력하세요"
-                            style="width:100%;padding:.75rem 1rem;border:2px solid #f1f5f9;border-radius:.75rem;font-size:.9rem;font-weight:600;outline:none;resize:vertical"
-                            onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#f1f5f9'"></textarea>
-                    </div>
-                    <button onclick="addCustomQ()"
-                        style="width:100%;background:#eab308;color:white;padding:1rem;border-radius:.75rem;font-size:1rem;font-weight:900;border:none;cursor:pointer;transition:opacity .2s"
-                        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">+ 문제 추가</button>
-                </div>
-            </div>
-            <!-- 만들어진 문제 목록 -->
-            <div class="card p-8">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-                    <h3 class="text-xl font-black" style="display:flex;align-items:center;gap:.5rem">
-                        <span style="width:.4rem;height:1.5rem;background:#10b981;border-radius:9999px;display:inline-block"></span>📋 문제 목록
-                    </h3>
-                    <button onclick="clearAllQ()"
-                        style="background:#fee2e2;color:#ef4444;padding:.4rem 1rem;border-radius:9999px;font-size:.78rem;font-weight:900;border:none;cursor:pointer"
-                        onmouseover="this.style.background='#ef4444';this.style.color='white'"
-                        onmouseout="this.style.background='#fee2e2';this.style.color='#ef4444'">전체 삭제</button>
-                </div>
-                <div id="q-list-admin">
-                    <p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">아직 만들어진 문제가 없습니다.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── 탭: 게임 진행 ── -->
-        <div id="panel-run" style="display:none" class="space-y-6">
-
-            <!-- 퀴즈 시작 버튼 (게임 대기 중일 때) -->
-            <div id="game-start-wrap" class="card p-8 text-center space-y-4">
-                <div>
-                    <span style="font-size:2.5rem">🚀</span>
-                    <h3 class="text-2xl font-black mt-2 mb-1">퀴즈 시작 준비</h3>
-                    <p style="font-size:.88rem;color:#94a3b8;font-weight:700">
-                        참여자가 입장하면 퀴즈 시작 버튼을 눌러주세요.<br>
-                        버튼을 누르면 참여자 화면에 첫 번째 문제가 바로 표시됩니다.
-                    </p>
-                </div>
-                <!-- 참여자 수 실시간 표시 -->
-                <div style="display:inline-flex;align-items:center;gap:.5rem;background:#f8fafc;border-radius:9999px;padding:.5rem 1.2rem;border:1px solid #e2e8f0">
-                    <span style="font-size:.8rem;font-weight:700;color:#94a3b8">현재 입장 참여자</span>
-                    <strong id="start-player-count" style="font-size:1.1rem;font-weight:900;color:#1e293b">0명</strong>
-                </div>
-            <!-- 참여자 목록 -->
-                <div id="player-list-wrap" style="display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;min-height:2rem;padding:.25rem">
-                    <p style="font-size:.8rem;color:#cbd5e1;font-weight:700">아직 입장한 참여자가 없습니다.</p>
-                </div>
-                <div>
-                    <button onclick="gameStart()"
-                        style="padding:1rem 3rem;background:linear-gradient(135deg,#eab308,#f59e0b);color:white;border:none;border-radius:9999px;font-size:1.1rem;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(234,179,8,.35);transition:all .2s"
-                        onmouseover="this.style.transform='scale(1.04)'" onmouseout="this.style.transform='scale(1)'">
-                        ▶ 퀴즈 시작!
-                    </button>
-                    <p style="font-size:.72rem;color:#cbd5e1;font-weight:700;margin-top:.6rem">문제 만들기 탭에서 문제를 먼저 등록해주세요</p>
-                </div>
-            </div>
-
-            <!-- ★ 메인 문제 표시 카드 (크고 선명하게) -->
-            <div class="card" style="overflow:hidden">
-                <!-- 상단 바: 상태 + 카운트다운 -->
-                <div style="background:#1e293b;padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
-                    <div style="display:flex;align-items:center;gap:1rem">
-                        <span id="game-status-txt" style="font-size:1rem;font-weight:900;color:#94a3b8">⬛ 게임 대기 중</span>
-                        <span style="font-size:.85rem;font-weight:700;color:#64748b">문제 <strong id="game-q-indicator" style="color:#e2e8f0">0 / 0</strong></span>
-                        <span style="font-size:.85rem;font-weight:700;color:#64748b">참여 <strong id="game-p-count" style="color:#e2e8f0">0명</strong></span>
-                    </div>
-                    <!-- 대형 카운트다운 -->
-                    <div id="admin-countdown-wrap" style="display:none;align-items:center;gap:.75rem">
-                        <div style="position:relative;width:72px;height:72px">
-                            <svg viewBox="0 0 72 72" style="width:72px;height:72px;transform:rotate(-90deg)">
-                                <circle cx="36" cy="36" r="30" fill="none" stroke="#334155" stroke-width="6"/>
-                                <circle id="cd-ring" cx="36" cy="36" r="30" fill="none" stroke="#ef4444" stroke-width="6"
-                                    stroke-dasharray="188.5" stroke-dashoffset="0" style="transition:stroke-dashoffset .1s linear,stroke .2s"/>
-                            </svg>
-                            <span id="admin-countdown" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:900;color:white">10</span>
-                        </div>
-                        <div>
-                            <p style="font-size:.65rem;font-weight:700;color:#64748b;margin-bottom:.1rem">남은시간</p>
-                            <!-- 선형 타이머 바 -->
-                            <div style="width:100px;height:8px;background:#334155;border-radius:9999px;overflow:hidden">
-                                <div id="admin-timer-bar" style="height:100%;background:#ef4444;border-radius:9999px;width:100%;transition:width .1s linear"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 문제 본문 (크고 선명하게) -->
-                <div id="game-preview" style="background:linear-gradient(135deg,#fffbeb,#fef9c3);padding:2rem 2rem 1.5rem;min-height:9rem;display:flex;align-items:flex-start;justify-content:center">
-                    <div style="text-align:center;width:100%">
-                        <p style="color:#92400e;font-weight:700;font-size:1.1rem">게임 시작 전입니다.<br>아래 버튼으로 첫 문제를 공개하세요.</p>
-                    </div>
-                </div>
-
-                <!-- 제어 버튼 -->
-                <div id="game-ctrl-grid" style="background:#f8fafc;padding:1rem 1.5rem;display:grid;grid-template-columns:1fr 1.4fr 1.4fr 1fr;gap:.6rem">
-                    <button onclick="gameShowPrevQ()"
-                        style="padding:.85rem;border-radius:.75rem;font-size:.88rem;font-weight:900;border:2px solid #e2e8f0;cursor:pointer;background:white;color:#64748b;transition:all .2s"
-                        onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">◀ 이전</button>
-                    <button onclick="gameShowNextQ()"
-                        style="padding:.85rem;border-radius:.75rem;font-size:.95rem;font-weight:900;border:none;cursor:pointer;background:#1e293b;color:white;transition:opacity .2s"
-                        onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">▶ 다음 문제</button>
-                    <button onclick="gameRevealAnswer()"
-                        style="padding:.85rem;border-radius:.75rem;font-size:.95rem;font-weight:900;border:none;cursor:pointer;background:#10b981;color:white;transition:opacity .2s"
-                        onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">✅ 정답 공개</button>
-                    <button onclick="gameEnd()"
-                        style="padding:.85rem;border-radius:.75rem;font-size:.82rem;font-weight:900;border:2px solid #e2e8f0;background:white;color:#94a3b8;cursor:pointer;transition:all .2s"
-                        onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">🏁 종료</button>
-                </div>
-            </div>
-
-            <!-- 참여자 응답 현황 -->
-            <div class="card p-8">
-                <h3 class="text-xl font-black mb-4" style="display:flex;align-items:center;gap:.5rem">
-                    <span style="width:.4rem;height:1.5rem;background:#3b82f6;border-radius:9999px;display:inline-block"></span>📊 참여자 응답 현황
-                </h3>
-                <div id="answer-dist"></div>
-            </div>
-
-            <!-- 정답자 목록 + 추첨 -->
-            <div class="card p-8">
-                <h3 class="text-xl font-black mb-4" style="display:flex;align-items:center;gap:.5rem">
-                    <span style="width:.4rem;height:1.5rem;background:#a855f7;border-radius:9999px;display:inline-block"></span>🏆 정답자 현황 & 추첨
-                </h3>
-                <div id="correct-list" style="margin-bottom:1rem">
-                    <p style="text-align:center;color:#cbd5e1;font-size:.85rem;font-weight:700;padding:1rem">정답을 공개하면 정답자 목록이 나타납니다.</p>
-                </div>
-                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-                    <button onclick="lottery('asc')"
-                        style="flex:1;min-width:7rem;padding:.75rem;border-radius:.75rem;font-size:.82rem;font-weight:900;border:2px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .2s"
-                        onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">⬆ 빠른순 추첨</button>
-                    <button onclick="lottery('desc')"
-                        style="flex:1;min-width:7rem;padding:.75rem;border-radius:.75rem;font-size:.82rem;font-weight:900;border:2px solid #e2e8f0;background:white;color:#64748b;cursor:pointer;transition:all .2s"
-                        onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">⬇ 느린순 추첨</button>
-                    <button onclick="lottery('random')"
-                        style="flex:1;min-width:7rem;padding:.75rem;border-radius:.75rem;font-size:.82rem;font-weight:900;border:none;background:linear-gradient(135deg,#f59e0b,#ef4444);color:white;cursor:pointer;transition:opacity .2s"
-                        onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">🎲 랜덤 추첨</button>
-                </div>
-                <div id="lottery-result" style="display:none;margin-top:1rem;text-align:center;background:linear-gradient(135deg,#fef9c3,#fefce8);border-radius:1rem;padding:1.5rem;border:2px solid #fde68a">
-                    <div style="font-size:2.5rem;margin-bottom:.5rem">🎉</div>
-                    <p style="font-size:.8rem;font-weight:700;color:#92400e;margin-bottom:.25rem">당첨자</p>
-                    <p id="lottery-winner" style="font-size:2rem;font-weight:900;color:#92400e"></p>
-                    <p id="lottery-time" style="font-size:.8rem;color:#a16207;font-weight:700;margin-top:.25rem"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- ── 탭: 데이터 관리 ── -->
-        <div id="panel-data" style="display:none" class="space-y-4">
-            <div class="card p-8">
-                <h3 class="text-xl font-black mb-6" style="display:flex;align-items:center;gap:.5rem">
-                    <span style="width:.4rem;height:1.5rem;background:#1e293b;border-radius:9999px;display:inline-block"></span>데이터 관리
-                </h3>
-                <div style="display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:1rem">
-                    <div style="background:#f8fafc;border-radius:1.25rem;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem">
-                        <div>
-                            <p style="font-weight:900;font-size:.95rem;color:#1e293b">⬇ 전체 데이터 CSV 다운로드</p>
-                            <p style="font-size:.78rem;color:#94a3b8;font-weight:700;margin-top:.2rem">랭킹 · 닉네임 투표 전체 포함</p>
-                        </div>
-                        <button onclick="adminDownloadAll2()"
-                            style="background:#1e293b;color:white;padding:.6rem 1.4rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:none;cursor:pointer;white-space:nowrap"
-                            onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">CSV 다운로드</button>
-                    </div>
-                    <div style="background:#f8fafc;border-radius:1.25rem;padding:1.25rem">
-                        <p style="font-weight:900;font-size:.95rem;color:#1e293b;margin-bottom:.3rem">🗑 참여자 랭킹 개별 삭제</p>
-                        <p style="font-size:.78rem;color:#94a3b8;font-weight:700;margin-bottom:.75rem">삭제할 참여자를 선택하세요</p>
-                        <div id="adm2-delete-list" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.75rem">
-                            <p style="font-size:.8rem;color:#cbd5e1;font-weight:700">참여자 데이터가 없습니다.</p>
-                        </div>
-                        <p style="font-size:.72rem;color:#f87171;font-weight:700">⚠ 삭제 후 복구할 수 없습니다</p>
-                    </div>
-                    <div style="background:#fff1f2;border-radius:1.25rem;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem;border:2px solid #fecdd3">
-                        <div>
-                            <p style="font-weight:900;font-size:.95rem;color:#e11d48">⚠ 전체 데이터 초기화 (리셋)</p>
-                            <p style="font-size:.78rem;color:#fb7185;font-weight:700;margin-top:.2rem">파트2의 모든 데이터가 삭제됩니다</p>
-                        </div>
-                        <button onclick="adminReset2()"
-                            style="background:#e11d48;color:white;padding:.6rem 1.4rem;border-radius:9999px;font-size:.82rem;font-weight:900;border:none;cursor:pointer;white-space:nowrap"
-                            onmouseover="this.style.opacity='.8'" onmouseout="this.style.opacity='1'">전체 리셋</button>
-                    </div>
-                </div>
-            </div>
-            <div class="card p-8">
-                <h3 class="text-xl font-black mb-6" style="display:flex;align-items:center;gap:.5rem">
-                    <span style="width:.4rem;height:1.5rem;background:#eab308;border-radius:9999px;display:inline-block"></span>🎓 수료평가 전체 랭킹
-                </h3>
-                <div id="adm2-rank-list"><p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">참여 데이터가 없습니다.</p></div>
-            </div>
-            <div class="card p-8">
-                <h3 class="text-xl font-black mb-6" style="display:flex;align-items:center;gap:.5rem">
-                    <span style="width:.4rem;height:1.5rem;background:#db2777;border-radius:9999px;display:inline-block"></span>🎁 닉네임 투표 현황
-                </h3>
-                <div id="adm2-vote-list"><p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">투표 데이터가 없습니다.</p></div>
-            </div>
-        </div>
-
-        <!-- ── 관리자용 Top 5 순위 대시보드 ── -->
-        <div class="card p-8">
-            <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-black" style="display:flex;align-items:center;gap:.5rem">
-                    <span style="width:.4rem;height:1.5rem;background:#f59e0b;border-radius:9999px;display:inline-block"></span>
-                    🏆 최종 순위 Top 5
-                </h3>
-                <span style="font-size:.72rem;font-weight:700;color:#94a3b8;background:#f8fafc;padding:.25rem .7rem;border-radius:9999px">점수 합계 · 동점 시 응답시간 빠른 순</span>
-            </div>
-            <div id="adm2-top5-board">
-                <p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">수료평가 참여자가 없습니다.</p>
-            </div>
-        </div>
-
-        <button onclick="goToLanding()" class="w-full bg-white border-2 border-slate-100 text-slate-400 py-6 rounded-3xl font-black text-xl hover:text-yellow-500 transition shadow-sm">← 처음으로</button>
-    </section>
-
-<script>
-/* ════════════════════════════════════════
-   데이터 — 만족도·밸런스·스피드 퀴즈
-════════════════════════════════════════ */
-const satQuestions = [
-    "비난보다 해결책을 찾는가?","역량을 충분히 발휘하는가?","아이디어를 자유롭게 제안하는가?",
-    "비효율적 행정이 적은가?","성과를 제대로 인정받는가?","정보가 투명하게 공유되는가?",
-    "휴가 사용이 자유로운가?","성장의 기회가 충분한가?","팀이 나를 지지해주는가?","조직문화가 긍정적인가?"
-];
-
-const balQuestions = [
-    {cat:"소통",q:"업무 메신저의 스타일은?",a:"용건만 간단히 '확인했습니다.'",b:"이모지와 함께 '넵! 확인했습니다 😊'"},
-    {cat:"소통",q:"중요 공지를 전달할 때?",a:"메일과 단톡방에 텍스트로 공지",b:"다 같이 모여서 얼굴 보고 설명"},
-    {cat:"소통",q:"후배의 실수를 발견했다면?",a:"그 즉시 냉철하게 피드백",b:"따로 불러서 완곡하게 조언"},
-    {cat:"소통",q:"나의 회의 스타일은?",a:"결론부터 말하는 효율 중심",b:"배경부터 차근차근 설명하는 이해 중심"},
-    {cat:"소통",q:"모르는 업무를 질문할 때?",a:"스스로 끝까지 찾아보고 질문",b:"빠른 처리를 위해 즉시 질문"},
-    {cat:"소통",q:"내 의견이 소수 의견이라면?",a:"근거가 확실하니 끝까지 설득",b:"팀의 화합을 위해 다수 의견 수용"},
-    {cat:"소통",q:"상사의 지시가 이해되지 않는다면?",a:"그 자리에서 의문점 바로 해결",b:"일단 알겠다고 한 뒤 나중에 따로 논의한다"},
-    {cat:"업무",q:"더 선호하는 업무 방식은?",a:"정해진 매뉴얼대로 정확하게",b:"상황에 맞춰 유연하고 창의적으로"},
-    {cat:"업무",q:"마감 직전 보고서 퀄리티?",a:"밤을 새워도 100% 완벽하게",b:"조금 아쉬워도 기한 내 제출"},
-    {cat:"업무",q:"새로운 시스템 도입 시?",a:"익숙한 기존 방식이 최고다",b:"빨리 배워서 새 시스템 적용"},
-    {cat:"업무",q:"내가 일하기 좋은 장소는?",a:"조용하고 집중할 수 있는 개인석",b:"자유롭게 소통하는 개방형 공간"},
-    {cat:"업무",q:"업무 보고서 작성 시?",a:"깔끔한 양식과 오타 없는 가독성",b:"양식보다 핵심 내용과 인사이트"},
-    {cat:"업무",q:"퇴근 직전 긴급 업무 요청?",a:"책임감 있게 오늘 처리하고 퇴근",b:"내일 아침 일찍 출근해서 처리"},
-    {cat:"업무",q:"업무 배분의 공정함이란?",a:"성과가 좋은 사람에게 더 많은 기회",b:"직급에 상관없이 균등한 배분"},
-    {cat:"조직",q:"팀 회식의 정석은?",a:"깔끔한 점심 맛집 회식",b:"퇴근 후 끈끈한 저녁 회식"},
-    {cat:"조직",q:"사무실 파티션 높이는?",a:"집중력을 위한 높은 파티션",b:"소통을 위한 낮은 파티션"},
-    {cat:"조직",q:"동료의 생일을 알았을 때?",a:"부담 없는 모바일 기프티콘",b:"작은 케이크라도 팀 전체 축하"},
-    {cat:"조직",q:"내가 원하는 팀의 분위기?",a:"프로페셔널하고 쿨한 비즈니스 관계",b:"가족같이 따뜻하고 끈끈한 정"},
-    {cat:"조직",q:"워크숍 프로그램을 짠다면?",a:"직무 교육 및 자기계발 강연",b:"액티비티 및 팀 빌딩 레크리에이션"},
-    {cat:"조직",q:"복지 혜택 딱 하나만?",a:"도서 및 교육비 무제한 지원",b:"금요 조기 퇴근 및 재택 확대"},
-    {cat:"조직",q:"동료가 업무로 우울해할 때?",a:"모르는 척 자리를 비켜주는 배려",b:"커피 한 잔 사주며 들어주는 배려"},
-    {cat:"결정",q:"협력 업체 선정의 기준은?",a:"철저한 단가와 스펙 중심 점수",b:"소통 능력과 장기적 신뢰 관계"},
-    {cat:"결정",q:"긴급 상황, 상사가 부재중?",a:"소신껏 선조치 후보고",b:"어떻게든 연락해서 지침 대기"},
-    {cat:"결정",q:"결정 시 더 중요한 가치는?",a:"과정보다 확실한 성과와 결과",b:"결과보다 모두가 납득하는 과정"},
-    {cat:"결정",q:"업체의 단가 인상 요청 시?",a:"계약 원칙에 근거한 엄격한 대응",b:"상생을 위한 유연한 조정 검토"},
-    {cat:"결정",q:"업무 효율을 위해 규정 예외?",a:"절대 불가, 원칙 준수가 우선",b:"성과를 위해 유연한 적용 가능"},
-    {cat:"결정",q:"더 신뢰하는 판단 근거는?",a:"과거의 통계와 숫자 데이터",b:"실무자의 직관과 현장 경험"},
-    {cat:"결정",q:"팀 목표 설정의 방식은?",a:"리더가 정해주는 명확한 가이드",b:"팀원 모두가 참여하는 합의형"},
-    {cat:"성장",q:"커리어의 최종 지향점은?",a:"한 분야의 최고 스페셜리스트",b:"조직 전체를 이끄는 제너럴 리더"},
-    {cat:"성장",q:"성공적인 프로젝트의 정의?",a:"목표한 비용 절감 수치 달성",b:"팀원 모두가 한 단계 성장한 경험"},
-    {cat:"성장",q:"역량 강화를 위해 필요한 교육?",a:"데이터 분석 등 실무 전문 지식",b:"협상력, 갈등 관리 등 소프트 스킬"},
-    {cat:"성장",q:"승진을 위해 더 중요한 것?",a:"압도적인 개인의 업무 성과",b:"원만한 대인 관계와 평판 관리"},
-    {cat:"성장",q:"나를 더 성장시키는 상사는?",a:"차갑지만 업무 스킬이 뛰어난 상사",b:"부족한 점을 따뜻하게 코칭해주는 상사"},
-    {cat:"성장",q:"새로운 프로젝트 기회?",a:"자신 있는 주력 분야를 맡는다",b:"전혀 새로운 미개척 분야에 도전"},
-    {cat:"성장",q:"업무 중 가장 행복한 순간?",a:"정교한 엑셀 장표가 완성됐을 때",b:"동료와 협업하여 문제를 해결했을 때"}
-];
-
-/* ════════════════════════════════════════
-   상태 변수
-════════════════════════════════════════ */
-// 파트1
-let curSat = 0, curBal = 0;
-let satAns = [], balAns = [];
-let userData = { nick: "", mbti: "" };
-let allMbti = [], allSatData = [], allBalData = [];
-
-// VOC
-let vocList = [];
-let selectedVocCat = '';
-
-/* ── 파트1 데이터 localStorage 저장/불러오기 ── */
-const P1_KEY = 'spring_part1_v1';
-
-function savePart1() {
-    try {
-        localStorage.setItem(P1_KEY, JSON.stringify({
-            allMbti, allSatData, allBalData, vocList, nicknames
-        }));
-    } catch(e) {}
-}
-
-function loadPart1() {
-    try {
-        const raw = localStorage.getItem(P1_KEY);
-        if (!raw) return;
-        const d = JSON.parse(raw);
-        if (d.allMbti)    allMbti    = d.allMbti;
-        if (d.allSatData) allSatData = d.allSatData;
-        if (d.allBalData) allBalData = d.allBalData;
-        if (d.vocList)    vocList    = d.vocList;
-        if (d.nicknames)  nicknames  = d.nicknames;
-    } catch(e) {}
-}
-
-// 파트2
-let userData2 = { nick: "" };
-let voteCount = 0;
-let nicknames = [];
-let speedRanking = [];
-
-/* ════════════════════════════════════════
-   공통 유틸
-════════════════════════════════════════ */
-function showSection(id) {
-    document.getElementById('page-landing').classList.add('hidden');
-    document.querySelectorAll('[id^="step-"]').forEach(s => s.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    // 파트1 입력 폼 진입 시 필드 초기화
-    if (id === 'step-intro') {
-        document.getElementById('user-nick').value = '';
-        document.getElementById('user-mbti').value = '';
-    }
-    // 파트2 입력 폼 진입 시 필드 초기화
-    if (id === 'step-intro2') {
-        document.getElementById('user-nick2').value = '';
-    }
-    window.scrollTo(0, 0);
-}
-
-function goToLanding() {
-    document.querySelectorAll('[id^="step-"]').forEach(s => s.classList.add('hidden'));
-    document.getElementById('page-landing').classList.remove('hidden');
-    window.scrollTo(0, 0);
-}
-
-function enterPart2() {
-    showSection('step-intro2');
-}
-
-/* ════════════════════════════════════════
-   반응형 헬퍼
-════════════════════════════════════════ */
-const isMobile = () => window.innerWidth < 640;
-const isTablet = () => window.innerWidth < 1024;
-
-/* ════════════════════════════════════════
-   파트 2 — 커스텀 문제 & 게임 상태
-════════════════════════════════════════ */
-let customQuestions = [];
-let selectedQType = 'ox';
-let selectedAns   = '';
-let _playerQStartTime = 0;
-let _playerAnswered   = false;
-let _playerTimerBar   = null;
-let currentPlayer = null; // 현재 참여자 로컬 데이터
-
-// localStorage 키
-const LS_STATE   = 'gq_game_state';   // 게임 상태 (관리자→참여자)
-const LS_PLAYERS = 'gq_players';      // 참여자 목록 (참여자→관리자)
-const LS_ANSWERS = 'gq_answers';      // 응답 데이터 (참여자→관리자)
-const LS_RESULT  = 'gq_results';      // 최종 결과 (관리자→참여자)
-
-// 게임 상태 읽기
-function getGameState() {
-    try { return JSON.parse(localStorage.getItem(LS_STATE)) || { state:'idle', qIdx:-1, q:null }; }
-    catch(e) { return { state:'idle', qIdx:-1, q:null }; }
-}
-// 게임 상태 쓰기 (관리자 전용)
-function setGameState(obj) {
-    try { localStorage.setItem(LS_STATE, JSON.stringify({ ...getGameState(), ...obj, ts: Date.now() })); }
-    catch(e) {}
-}
-// 참여자 목록 읽기
-function getPlayers() {
-    try { return JSON.parse(localStorage.getItem(LS_PLAYERS)) || []; }
-    catch(e) { return []; }
-}
-// 참여자 등록 (참여자 탭에서 호출)
-function registerPlayerLS(nick) {
-    const list = getPlayers();
-    if (!list.find(p => p.nick === nick)) {
-        list.push({ nick, score:0, correct:0, totalTime:0, ts: Date.now() });
-        try { localStorage.setItem(LS_PLAYERS, JSON.stringify(list)); } catch(e) {}
-    }
-    currentPlayer = list.find(p => p.nick === nick);
-}
-// 내 점수 갱신
-function updateMyScore(score, correct, totalTime) {
-    const list = getPlayers();
-    const me = list.find(p => p.nick === (currentPlayer ? currentPlayer.nick : ''));
-    if (me) { me.score = score; me.correct = correct; me.totalTime = totalTime; }
-    try { localStorage.setItem(LS_PLAYERS, JSON.stringify(list)); } catch(e) {}
-}
-// 응답 데이터 읽기
-function getAnswers(qIdx) {
-    try { return (JSON.parse(localStorage.getItem(LS_ANSWERS)) || {})[qIdx] || []; }
-    catch(e) { return []; }
-}
-// 응답 저장 (참여자 탭에서 호출)
-function saveAnswer(qIdx, nick, choice, elapsed) {
-    try {
-        const all = JSON.parse(localStorage.getItem(LS_ANSWERS)) || {};
-        if (!all[qIdx]) all[qIdx] = [];
-        if (!all[qIdx].find(a => a.nick === nick)) {
-            all[qIdx].push({ nick, choice, elapsed });
-        }
-        localStorage.setItem(LS_ANSWERS, JSON.stringify(all));
-    } catch(e) {}
-}
-
-// ── 관리자용 로컬 캐시 ──
-let _cachedState   = { state:'idle', qIdx:-1, q:null };
-let _adminPollTimer = null;
-
-// 관리자 폴링 시작 (500ms마다 참여자 목록·응답 갱신)
-function startAdminPoll() {
-    stopAdminPoll();
-    _adminPollTimer = setInterval(() => {
-        refreshGamePanel();
-        if (_cachedState.state === 'showing') updateAnswerDist();
-    }, 500);
-}
-function stopAdminPoll() { clearInterval(_adminPollTimer); }
-
-// ── 참여자용 폴링 ──
-let _playerPollTimer = null;
-let _lastSeenQIdx = -2;
-let _lastSeenState = '';
-
-function startPlayerPoll() {
-    stopPlayerPoll();
-    _playerPollTimer = setInterval(() => {
-        const gs = getGameState();
-        if (gs.state === _lastSeenState && gs.qIdx === _lastSeenQIdx) return; // 변화 없음
-        _lastSeenState = gs.state;
-        _lastSeenQIdx  = gs.qIdx;
-        onGameStateChanged(gs);
-    }, 400);
-}
-function stopPlayerPoll() { clearInterval(_playerPollTimer); }
-
-// 참여자: 게임 상태 변화 처리
-function onGameStateChanged(gs) {
-    const before  = document.getElementById('player-before-start');
-    const started = document.getElementById('player-quiz-started');
-    const introEl = document.getElementById('speed-intro');
-    const quizEl  = document.getElementById('speed-quiz');
-    const resultEl= document.getElementById('speed-result');
-
-    if (gs.state === 'idle') {
-        // 대기 중
-        if (before)  before.style.display  = 'block';
-        if (started) started.style.display = 'none';
-
-    } else if (gs.state === 'started') {
-        // 시작됨 — 집중 화면
-        if (before)  before.style.display  = 'none';
-        if (started) started.style.display = 'block';
-
-    } else if (gs.state === 'showing' && gs.q && !_playerAnswered) {
-        // 문제 공개 — 퀴즈 화면으로 전환
-        if (introEl) introEl.classList.add('hidden');
-        if (resultEl) resultEl.classList.add('hidden');
-        if (quizEl) quizEl.classList.remove('hidden');
-        pushQToPlayer(gs.q, gs.qIdx);
-
-    } else if (gs.state === 'revealed' && gs.q) {
-        // 정답 공개 — 내 정답 여부 표시
-        const myAns = getAnswers(gs.qIdx).find(a => a.nick === (currentPlayer ? currentPlayer.nick : ''));
-        if (myAns) {
-            const isOk = gs.q.type === 'short'
-                ? myAns.choice.trim().toLowerCase() === gs.q.ans.trim().toLowerCase()
-                : myAns.choice === gs.q.ans;
-            document.getElementById('spd-feedback').innerText = isOk ? '✅ 정답입니다! +10점' : `❌ 오답! 정답은 "${gs.q.ans}"`;
-            document.getElementById('spd-feedback').style.color = isOk ? '#10b981' : '#ef4444';
-            if (isOk && currentPlayer) {
-                currentPlayer.score    = (currentPlayer.score    || 0) + 10;
-                currentPlayer.correct  = (currentPlayer.correct  || 0) + 1;
-                currentPlayer.totalTime= (currentPlayer.totalTime|| 0) + myAns.elapsed;
-                updateMyScore(currentPlayer.score, currentPlayer.correct, currentPlayer.totalTime);
-            } else if (currentPlayer && myAns.choice !== '__timeout__') {
-                currentPlayer.totalTime= (currentPlayer.totalTime|| 0) + myAns.elapsed;
-                updateMyScore(currentPlayer.score, currentPlayer.correct, currentPlayer.totalTime);
-            }
-        }
-        if (gs.q.desc) {
-            const de = document.getElementById('spd-desc');
-            if (de) { de.innerText = gs.q.desc; de.classList.remove('hidden'); }
-        }
-        const waitEl = document.getElementById('spd-wait-next');
-        if (waitEl) waitEl.classList.remove('hidden');
-
-    } else if (gs.state === 'ended') {
-        // 게임 종료 — 결과 화면
-        stopPlayerPoll();
-        if (quizEl)  quizEl.classList.add('hidden');
-        if (introEl) introEl.classList.add('hidden');
-        if (resultEl) resultEl.classList.remove('hidden');
-        const me = getPlayers().find(p => p.nick === (currentPlayer ? currentPlayer.nick : ''));
-        if (me) {
-            document.getElementById('res-score').innerText   = (me.score || 0) + '점';
-            document.getElementById('res-correct').innerText = (me.correct || 0) + '개';
-            document.getElementById('res-time').innerText    = Math.round(me.totalTime || 0) + '초';
-        }
-    }
-}
-
-/* ════════════════════════════════════════
-   BGM — Web Audio API
-════════════════════════════════════════ */
-function getACtx() {
-    if (!window._ac) window._ac = new (window.AudioContext || window.webkitAudioContext)();
-    return window._ac;
-}
-function playTones(freqs, durs, type='sine', vol=0.25) {
-    try {
-        const ctx = getACtx(); let t = ctx.currentTime;
-        freqs.forEach((f,i) => {
-            const o=ctx.createOscillator(), g=ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.type=type; o.frequency.value=f;
-            g.gain.setValueAtTime(vol,t);
-            g.gain.exponentialRampToValueAtTime(0.001,t+durs[i]);
-            o.start(t); o.stop(t+durs[i]); t+=durs[i];
-        });
-    } catch(e){}
-}
-function bgmNextQ()  { playTones([523,659,784,1047],[.1,.1,.1,.2],'triangle',0.22); }
-function bgmReveal() { playTones([523,523,523,659,523,659,784],[.1,.1,.1,.3,.1,.1,.45],'square',0.16); }
-function bgmLottery(cb) {
-    try {
-        const ctx=getACtx(), buf=ctx.createBuffer(1,ctx.sampleRate*1.4,ctx.sampleRate);
-        const d=buf.getChannelData(0);
-        for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*(i<d.length*.72?0.12:0);
-        const s=ctx.createBufferSource(), f=ctx.createBiquadFilter();
-        f.type='bandpass'; f.frequency.value=220;
-        s.buffer=buf; s.connect(f); f.connect(ctx.destination); s.start();
-        s.onended=()=>{ playTones([523,659,784,1047,1047,1047],[.1,.1,.1,.12,.12,.38],'triangle',0.28); if(cb) setTimeout(cb,700); };
-    } catch(e){ if(cb) cb(); }
-}
-
-/* ════════════════════════════════════════
-   문제 만들기 UI
-════════════════════════════════════════ */
-function setQType(type) {
-    selectedQType=type; selectedAns='';
-    ['ox','multi','short'].forEach(t=>{
-        const b=document.getElementById('qtype-'+t); if(!b) return;
-        b.style.background  = t===type?'#1e293b':'white';
-        b.style.color       = t===type?'white':'#94a3b8';
-        b.style.borderColor = t===type?'#1e293b':'#e2e8f0';
-    });
-    document.getElementById('choices-area').style.display = type==='multi'?'block':'none';
-    document.getElementById('ans-ox').style.display       = type==='ox'?'flex':'none';
-    document.getElementById('ans-text').style.display     = type!=='ox'?'block':'none';
-    document.getElementById('ans-text').placeholder       = type==='multi'?'정답 번호 또는 보기 텍스트':'정답 텍스트를 입력';
-    ['O','X'].forEach(v=>{ const b=document.getElementById('ans-btn-'+v); if(b){b.style.background='white';b.style.borderColor='#e2e8f0';b.style.color='#1e293b';} });
-}
-function setAns(val) {
-    selectedAns=val;
-    ['O','X'].forEach(v=>{ const b=document.getElementById('ans-btn-'+v); if(!b) return;
-        const on=v===val; b.style.background=on?(v==='O'?'#10b981':'#ef4444'):'white';
-        b.style.borderColor=on?(v==='O'?'#10b981':'#ef4444'):'#e2e8f0';
-        b.style.color=on?'white':'#1e293b'; });
-}
-function addCustomQ() {
-    const tag=document.getElementById('q-tag').value.trim();
-    const q  =document.getElementById('q-text').value.trim();
-    const desc=document.getElementById('q-desc').value.trim();
-    if(!q) return alert('문제를 입력해주세요.');
-    let ans=selectedQType==='ox'?selectedAns:document.getElementById('ans-text').value.trim();
-    if(!ans) return alert('정답을 입력해주세요.');
-    let choices=[];
-    if(selectedQType==='multi'){
-        choices=Array.from(document.querySelectorAll('.choice-input')).map(e=>e.value.trim()).filter(Boolean);
-        if(choices.length<2) return alert('보기를 2개 이상 입력해주세요.');
-    }
-    customQuestions.push({type:selectedQType,tag,q,choices,ans,desc});
-    saveQuestions();
-    renderQListAdmin();
-    document.getElementById('q-tag').value=''; document.getElementById('q-text').value='';
-    document.getElementById('q-desc').value=''; document.getElementById('ans-text').value='';
-    document.querySelectorAll('.choice-input').forEach(e=>e.value='');
-    selectedAns=''; setQType(selectedQType);
-    alert(`문제 추가 완료! (총 ${customQuestions.length}문제)`);
-}
-function renderQListAdmin() {
-    const el=document.getElementById('q-list-admin');
-    if(!customQuestions.length){el.innerHTML='<p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">아직 만들어진 문제가 없습니다.</p>';return;}
-    const tl={ox:'OX',multi:'다지선다',short:'주관식'}, tc={ox:'#3b82f6',multi:'#f59e0b',short:'#a855f7'};
-    el.innerHTML=customQuestions.map((q,i)=>`
-        <div style="background:#f8fafc;border-radius:.9rem;padding:1rem;margin-bottom:.6rem;border-left:4px solid ${tc[q.type]}">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;flex-wrap:wrap">
-                <div style="flex:1">
-                    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem;flex-wrap:wrap">
-                        <span style="background:${tc[q.type]}22;color:${tc[q.type]};padding:.15rem .55rem;border-radius:9999px;font-size:.7rem;font-weight:900">${tl[q.type]}</span>
-                        ${q.tag?`<span style="background:#f1f5f9;color:#64748b;padding:.15rem .55rem;border-radius:9999px;font-size:.7rem;font-weight:700">${q.tag}</span>`:''}
-                        <span style="color:#cbd5e1;font-size:.7rem;font-weight:700">Q${i+1}</span>
-                    </div>
-                    <p style="font-size:.88rem;font-weight:700;color:#1e293b;margin-bottom:.3rem">${q.q}</p>
-                    ${q.choices.length?`<p style="font-size:.75rem;color:#94a3b8;font-weight:600">보기: ${q.choices.map((c,j)=>`${['①','②','③','④','⑤'][j]}${c}`).join(' ')}</p>`:''}
-                    <p style="font-size:.75rem;color:#10b981;font-weight:900;margin-top:.2rem">정답: ${q.ans}</p>
-                    ${q.desc?`<p style="font-size:.72rem;color:#94a3b8;font-weight:600;margin-top:.2rem">해설: ${q.desc}</p>`:''}
-                </div>
-                <div style="display:flex;gap:.35rem;flex-shrink:0;align-items:center">
-                    <!-- 순서 변경 -->
-                    <div style="display:flex;flex-direction:column;gap:.15rem">
-                        <button onclick="moveCustomQ(${i},'up')"
-                            style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:.3rem;padding:.15rem .45rem;font-size:.65rem;font-weight:900;color:#64748b;cursor:pointer;line-height:1"
-                            onmouseover="this.style.background='#1e293b';this.style.color='white'"
-                            onmouseout="this.style.background='#f8fafc';this.style.color='#64748b'" title="위로">▲</button>
-                        <button onclick="moveCustomQ(${i},'down')"
-                            style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:.3rem;padding:.15rem .45rem;font-size:.65rem;font-weight:900;color:#64748b;cursor:pointer;line-height:1"
-                            onmouseover="this.style.background='#1e293b';this.style.color='white'"
-                            onmouseout="this.style.background='#f8fafc';this.style.color='#64748b'" title="아래로">▼</button>
-                    </div>
-                    <button onclick="editCustomQ(${i})"
-                        style="background:#eff6ff;border:none;border-radius:.4rem;padding:.3rem .6rem;font-size:.72rem;font-weight:900;color:#3b82f6;cursor:pointer;flex-shrink:0"
-                        onmouseover="this.style.background='#3b82f6';this.style.color='white'"
-                        onmouseout="this.style.background='#eff6ff';this.style.color='#3b82f6'">✏ 수정</button>
-                    <button onclick="removeCustomQ(${i})"
-                        style="background:#fee2e2;border:none;border-radius:.4rem;padding:.3rem .6rem;font-size:.72rem;font-weight:900;color:#ef4444;cursor:pointer;flex-shrink:0"
-                        onmouseover="this.style.background='#ef4444';this.style.color='white'"
-                        onmouseout="this.style.background='#fee2e2';this.style.color='#ef4444'">✕ 삭제</button>
-                </div>
-            </div>
-        </div>`).join('');
-}
-function removeCustomQ(idx){ customQuestions.splice(idx,1); saveQuestions(); renderQListAdmin(); }
-
-function moveCustomQ(idx, dir) {
-    if (dir === 'up' && idx === 0) return;
-    if (dir === 'down' && idx === customQuestions.length - 1) return;
-    const swapIdx = dir === 'up' ? idx - 1 : idx + 1;
-    [customQuestions[idx], customQuestions[swapIdx]] = [customQuestions[swapIdx], customQuestions[idx]];
-    saveQuestions();
-    renderQListAdmin();
-}
-
-function editCustomQ(idx) {
-    const q = customQuestions[idx];
-    // 문제 만들기 탭으로 전환
-    switchAdminTab('make');
-    // 폼에 기존 값 채우기
-    setQType(q.type);
-    document.getElementById('q-tag').value  = q.tag  || '';
-    document.getElementById('q-text').value = q.q    || '';
-    document.getElementById('q-desc').value = q.desc || '';
-    if (q.type === 'ox') {
-        setAns(q.ans);
-    } else {
-        document.getElementById('ans-text').value = q.ans || '';
-        if (q.type === 'multi') {
-            const inputs = document.querySelectorAll('.choice-input');
-            inputs.forEach((el, i) => { el.value = q.choices[i] || ''; });
-        }
-    }
-    // 기존 문제 삭제 (수정 후 새로 추가되므로)
-    customQuestions.splice(idx, 1);
-    saveQuestions();
-    renderQListAdmin();
-    // 스크롤 상단으로
-    window.scrollTo(0, 0);
-    // 안내 메시지
-    const btn = document.querySelector('[onclick="addCustomQ()"]');
-    if (btn) { btn.innerText = '✏ 문제 수정 완료 (저장)'; btn.style.background = '#3b82f6';
-        setTimeout(() => { btn.innerText = '+ 문제 추가'; btn.style.background = '#eab308'; }, 8000); }
-}
-function clearAllQ(){ if(!customQuestions.length||!confirm('모든 문제를 삭제하시겠습니까?')) return; customQuestions=[]; saveQuestions(); renderQListAdmin(); }
-
-/* ── localStorage 저장/불러오기 ── */
-const Q_STORAGE_KEY = 'guquiz_questions_v1';
-function saveQuestions() {
-    try { localStorage.setItem(Q_STORAGE_KEY, JSON.stringify(customQuestions)); } catch(e) {}
-}
-function loadQuestions() {
-    try {
-        const raw = localStorage.getItem(Q_STORAGE_KEY);
-        if (raw) { customQuestions = JSON.parse(raw); renderQListAdmin(); }
-    } catch(e) {}
-}
-// 페이지 로드 시 저장된 문제 불러오기
-window.addEventListener('DOMContentLoaded', () => {
-    loadQuestions();
-    loadPart1();
-});
-
-/* ════════════════════════════════════════
-   관리자 탭
-════════════════════════════════════════ */
-function switchAdminTab(tab) {
-    ['make','run','data'].forEach(t=>{
-        const p=document.getElementById('panel-'+t), b=document.getElementById('tab-'+t); if(!p||!b) return;
-        const on=t===tab;
-        p.style.display=on?'block':'none';
-        b.style.background=on?'#1e293b':'white'; b.style.color=on?'white':'#94a3b8'; b.style.borderColor=on?'#1e293b':'#e2e8f0';
-    });
-    if(tab==='run') {
-        // 게임 탭 진입 시 localStorage 게임상태 초기화 (idle이 아닌 경우 유지)
-        const gs = getGameState();
-        if (gs.state === 'idle') {
-            try { localStorage.removeItem(LS_PLAYERS); localStorage.removeItem(LS_ANSWERS); } catch(e) {}
-        }
-        startAdminPoll();
-        refreshGamePanel();
-    }
-    if(tab==='data') refreshDataPanel();
-}
-
-/* ════════════════════════════════════════
-   관리자 카운트다운 (원형 링 + 3구간 BGM)
-════════════════════════════════════════ */
-let _adminCdTimer = null;
-const CD_CIRCUMFERENCE = 2 * Math.PI * 30; // r=30 → 188.5
-
-function startAdminCountdown(sec) {
-    clearInterval(_adminCdTimer);
-    const wrap  = document.getElementById('admin-countdown-wrap');
-    const cdEl  = document.getElementById('admin-countdown');
-    const barEl = document.getElementById('admin-timer-bar');
-    const ring  = document.getElementById('cd-ring');
-    if (!wrap) return;
-    wrap.style.display = 'flex';
-    let t = sec;
-    let lastBeep = -1; // 같은 초에 중복 비프 방지
-
-    function update() {
-        const pct = Math.max(0, t / sec);
-        // 원형 링 offset
-        if (ring) ring.style.strokeDashoffset = (1 - pct) * CD_CIRCUMFERENCE;
-        // 선형 바
-        if (barEl) barEl.style.width = (pct * 100) + '%';
-        // 숫자 (정수)
-        const rounded = Math.ceil(t);
-        if (cdEl) cdEl.innerText = rounded > 0 ? rounded : 0;
-
-        // 색상 구간
-        let color;
-        if (t <= 3)      color = '#ef4444'; // 빨강
-        else if (t <= 5) color = '#f97316'; // 주황
-        else             color = '#22c55e'; // 초록
-
-        if (ring)  ring.style.stroke = color;
-        if (barEl) barEl.style.background = color;
-        if (cdEl)  cdEl.style.color = color;
-
-        // 구간별 비프 (초가 바뀔 때만)
-        if (rounded !== lastBeep && rounded > 0) {
-            lastBeep = rounded;
-            if      (t <= 3) bgmBeep('urgent');   // 3초 이하: 매우 높고 빠른 2연타
-            else if (t <= 5) bgmBeep('warning');  // 4~5초: 중고음 빠른 단타
-            else             bgmBeep('normal');   // 6~10초: 낮은 단타
-        }
-
-        if (t <= 0) {
-            clearInterval(_adminCdTimer);
-            if (cdEl) cdEl.innerText = '0';
-            bgmTimeUp();
-        }
-    }
-
-    update();
-    _adminCdTimer = setInterval(() => { t -= 0.1; update(); }, 100);
-}
-
-function stopAdminCountdown() {
-    clearInterval(_adminCdTimer);
-    const wrap = document.getElementById('admin-countdown-wrap');
-    if (wrap) wrap.style.display = 'none';
-}
-
-// 구간별 비프음 — 3단계
-function bgmBeep(level) {
-    try {
-        const ctx = getACtx();
-        const t = ctx.currentTime;
-        if (level === 'urgent') {
-            // 3초 이하: 매우 고음(1600Hz) 2연타, 매우 짧고 강렬
-            [1600, 2000].forEach((freq, i) => {
-                const o = ctx.createOscillator(), g = ctx.createGain();
-                o.connect(g); g.connect(ctx.destination);
-                o.type = 'square'; o.frequency.value = freq;
-                const st = t + i * 0.07;
-                g.gain.setValueAtTime(0.28, st);
-                g.gain.exponentialRampToValueAtTime(0.001, st + 0.055);
-                o.start(st); o.stop(st + 0.055);
-            });
-        } else if (level === 'warning') {
-            // 4~5초: 중고음(1050Hz) 단타, 짧고 또렷
-            const o = ctx.createOscillator(), g = ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.type = 'square'; o.frequency.value = 1050;
-            g.gain.setValueAtTime(0.18, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.075);
-            o.start(t); o.stop(t + 0.075);
-        } else {
-            // 6~10초: 낮은 단타(700Hz), 부드럽고 짧게
-            const o = ctx.createOscillator(), g = ctx.createGain();
-            o.connect(g); g.connect(ctx.destination);
-            o.type = 'sine'; o.frequency.value = 700;
-            g.gain.setValueAtTime(0.10, t);
-            g.gain.exponentialRampToValueAtTime(0.001, t + 0.09);
-            o.start(t); o.stop(t + 0.09);
-        }
-    } catch(e) {}
-}
-
-// 시간 종료 — 농구 경기 부저음 스타일 (짧고 강렬한 저음 버저)
-function bgmTimeUp() {
-    try {
-        const ctx = getACtx();
-        const t = ctx.currentTime;
-        // 농구 부저: 낮은 사각파 + 약간 상승 후 유지 → 컷
-        const o1 = ctx.createOscillator(), g1 = ctx.createGain();
-        o1.connect(g1); g1.connect(ctx.destination);
-        o1.type = 'square';
-        o1.frequency.setValueAtTime(160, t);
-        o1.frequency.linearRampToValueAtTime(180, t + 0.05);
-        o1.frequency.setValueAtTime(175, t + 0.05);
-        g1.gain.setValueAtTime(0.0, t);
-        g1.gain.linearRampToValueAtTime(0.38, t + 0.02); // 빠른 어택
-        g1.gain.setValueAtTime(0.35, t + 0.55);
-        g1.gain.linearRampToValueAtTime(0.0, t + 0.62);  // 갑작스런 컷오프
-        o1.start(t); o1.stop(t + 0.65);
-
-        // 하모닉 (옥타브 위 — 약하게 섞어서 두께감)
-        const o2 = ctx.createOscillator(), g2 = ctx.createGain();
-        o2.connect(g2); g2.connect(ctx.destination);
-        o2.type = 'sawtooth';
-        o2.frequency.setValueAtTime(350, t);
-        g2.gain.setValueAtTime(0.0, t);
-        g2.gain.linearRampToValueAtTime(0.10, t + 0.02);
-        g2.gain.setValueAtTime(0.09, t + 0.55);
-        g2.gain.linearRampToValueAtTime(0.0, t + 0.62);
-        o2.start(t); o2.stop(t + 0.65);
-    } catch(e) {}
-}
-
-// 구버전 bgmTick (호환용 빈 함수)
-function bgmTick() {}
-
-/* ════════════════════════════════════════
-   게임 진행 패널
-════════════════════════════════════════ */
-function refreshGamePanel() {
-    const gs    = getGameState();
-    const pList = getPlayers();
-    _cachedState = gs;
-
-    const total = customQuestions.length;
-    const qNum  = gs.qIdx >= 0 ? gs.qIdx + 1 : 0;
-    document.getElementById('game-q-indicator').innerText = `${qNum} / ${total}`;
-    document.getElementById('game-p-count').innerText     = pList.length + '명';
-
-    const spc = document.getElementById('start-player-count');
-    if (spc) spc.innerText = pList.length + '명';
-
-    const sm = { idle:'⬛ 게임 대기 중', started:'✅ 퀴즈 시작됨', showing:'▶ 문제 공개 중', revealed:'✅ 정답 공개됨', ended:'🏁 게임 종료' };
-    document.getElementById('game-status-txt').innerText = sm[gs.state] || '';
-
-    const startWrap = document.getElementById('game-start-wrap');
-    if (startWrap) startWrap.style.display = gs.state === 'idle' ? 'block' : 'none';
-
-    // 참여자 목록 표시
-    renderPlayerList(pList);
-}
-
-// 퀴즈 시작 — 참여자 화면을 "시작됨" 상태로 전환 후 첫 문제 공개
-function gameStart() {
-    if (!customQuestions.length) return alert('먼저 문제를 만들어주세요! (✏️ 문제 만들기 탭)');
-    const pList = getPlayers();
-    if (!pList.length) {
-        if (!confirm('아직 입장한 참여자가 없습니다. 그래도 퀴즈를 시작하시겠습니까?')) return;
-    }
-    try { localStorage.removeItem(LS_ANSWERS); } catch(e) {}
-    setGameState({ state:'started', qIdx:-1, q:null });
-    const startWrap = document.getElementById('game-start-wrap');
-    if (startWrap) startWrap.style.display = 'none';
-    refreshGamePanel();
-    bgmNextQ();
-    startAdminPoll();
-    setTimeout(() => { gameShowNextQ(); }, 800);
-}
-
-function gameShowNextQ() {
-    if(!customQuestions.length) return alert('먼저 문제를 만들어주세요! (✏️ 문제 만들기 탭)');
-    const gs = getGameState();
-    const curIdx = gs.qIdx;
-    if(curIdx >= customQuestions.length-1) return alert('모든 문제를 공개했습니다. 게임을 종료해주세요.');
-    const newIdx = curIdx + 1;
-    const q = customQuestions[newIdx];
-    // 해당 문제 답변 초기화
-    try {
-        const all = JSON.parse(localStorage.getItem(LS_ANSWERS)) || {};
-        all[newIdx] = [];
-        localStorage.setItem(LS_ANSWERS, JSON.stringify(all));
-    } catch(e) {}
-    setGameState({ state:'showing', qIdx: newIdx, q });
-    _showQuestionInAdminPanel(newIdx);
-}
-
-function gameShowPrevQ() {
-    const gs = getGameState();
-    if(gs.qIdx <= 0) return alert('첫 번째 문제입니다. 이전 문제가 없습니다.');
-    const newIdx = gs.qIdx - 1;
-    const q = customQuestions[newIdx];
-    try {
-        const all = JSON.parse(localStorage.getItem(LS_ANSWERS)) || {};
-        all[newIdx] = [];
-        localStorage.setItem(LS_ANSWERS, JSON.stringify(all));
-    } catch(e) {}
-    setGameState({ state:'showing', qIdx: newIdx, q });
-    _showQuestionInAdminPanel(newIdx);
-}
-
-function _showQuestionInAdminPanel(idx) {
-    const q=customQuestions[idx];
-    bgmNextQ();
-    const mob = isMobile();
-    const nums=['①','②','③','④','⑤'];
-    let choicesHtml='';
-    if(q.type==='ox'){
-        const cardW = mob ? 'max-width:120px' : 'max-width:160px';
-        const fontSize = mob ? '2.2rem' : '2.8rem';
-        choicesHtml=`<div style="display:flex;gap:.75rem;justify-content:center;margin-top:1.25rem">
-            <div id="choice-card-O" style="flex:1;${cardW};background:#fff1f2;border:3px solid #fda4af;border-radius:1rem;padding:.85rem;text-align:center;transition:all .3s">
-                <span style="font-size:${fontSize};font-weight:900;color:#db2777;line-height:1">O</span>
-            </div>
-            <div id="choice-card-X" style="flex:1;${cardW};background:#eff6ff;border:3px solid #93c5fd;border-radius:1rem;padding:.85rem;text-align:center;transition:all .3s">
-                <span style="font-size:${fontSize};font-weight:900;color:#3b82f6;line-height:1">X</span>
-            </div>
-        </div>`;
-    } else if(q.type==='multi'&&q.choices.length){
-        const gridCols = mob ? 'grid-template-columns:1fr'
-            : q.choices.length<=2 ? 'grid-template-columns:repeat(2,minmax(0,1fr))'
-            : 'grid-template-columns:repeat(auto-fit,minmax(180px,1fr))';
-        const txtSize = mob ? '.95rem' : '1.05rem';
-        choicesHtml=`<div style="display:grid;${gridCols};gap:.5rem;margin-top:1.1rem">
-            ${q.choices.map((c,j)=>`
-            <div id="choice-card-${j}" style="background:white;border:2px solid #fde68a;border-radius:.75rem;padding:.65rem .9rem;display:flex;align-items:center;gap:.5rem;transition:all .3s">
-                <span style="font-size:1.05rem;font-weight:900;color:#92400e;min-width:1.4rem">${nums[j]}</span>
-                <span style="font-size:${txtSize};font-weight:700;color:#1e293b;line-height:1.3">${c}</span>
-            </div>`).join('')}
-        </div>`;
-    } else if(q.type==='short'){
-        choicesHtml=`<div style="margin-top:1rem;text-align:center">
-            <div id="choice-card-short" style="display:inline-block;background:#f8fafc;border:2px dashed #e2e8f0;border-radius:.75rem;padding:.6rem 1.5rem;transition:all .3s">
-                <span style="font-size:.9rem;font-weight:700;color:#94a3b8">✍ 주관식 — 직접 입력</span>
-            </div>
-        </div>`;
-    }
-    const qFontSize = mob ? '1.15rem' : '1.55rem';
-    document.getElementById('game-preview').innerHTML=`
-        <div style="width:100%">
-            <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.75rem;flex-wrap:wrap">
-                <span style="background:#1e293b;color:#fbbf24;padding:.25rem .7rem;border-radius:9999px;font-size:.8rem;font-weight:900">Q${idx+1} / ${customQuestions.length}</span>
-                ${q.tag?`<span style="background:#fde68a;color:#92400e;padding:.25rem .7rem;border-radius:9999px;font-size:.78rem;font-weight:700">${q.tag}</span>`:''}
-                <span style="background:${q.type==='ox'?'#fee2e2':q.type==='multi'?'#fef9c3':'#f3e8ff'};color:${q.type==='ox'?'#dc2626':q.type==='multi'?'#92400e':'#7c3aed'};padding:.25rem .7rem;border-radius:9999px;font-size:.75rem;font-weight:900">${q.type==='ox'?'OX형':q.type==='multi'?'다지선다':'주관식'}</span>
-            </div>
-            <p style="font-size:${qFontSize};font-weight:900;color:#92400e;line-height:1.5;word-break:keep-all">${q.q}</p>
-            ${choicesHtml}
-        </div>`;
-    document.getElementById('answer-dist').innerHTML='<p style="color:#cbd5e1;font-size:.85rem;font-weight:700;text-align:center;padding:1rem">참여자 응답 수집 중...</p>';
-    document.getElementById('correct-list').innerHTML='<p style="color:#cbd5e1;font-size:.85rem;font-weight:700;text-align:center;padding:1rem">정답 공개 후 확인 가능합니다.</p>';
-    document.getElementById('lottery-result').style.display='none';
-    refreshGamePanel();
-    if(window._ansInt) clearInterval(window._ansInt);
-    window._ansInt=setInterval(updateAnswerDist,1000);
-    startAdminCountdown(10);
-}
-
-function gameRevealAnswer() {
-    const gs = getGameState();
-    if(gs.qIdx<0) return alert('먼저 문제를 공개해주세요.');
-    if(gs.state==='revealed') return;
-    setGameState({ state:'revealed' });
-    clearInterval(window._ansInt);
-    stopAdminCountdown();
-    bgmReveal();
-    const q=customQuestions[gs.qIdx];
-    updateAnswerDist(true);
-    const nums=['①','②','③','④','⑤'];
-    if(q.type==='ox'){
-        ['O','X'].forEach(v=>{
-            const card=document.getElementById('choice-card-'+v);
-            if(!card) return;
-            const isAns=v===q.ans;
-            if(isAns){
-                card.style.background='#dcfce7'; card.style.border='4px solid #22c55e'; card.style.boxShadow='0 0 0 4px #bbf7d0';
-                card.innerHTML=`<span style="font-size:2.8rem;font-weight:900;color:#16a34a;line-height:1">${v}</span><p style="font-size:.9rem;font-weight:900;color:#16a34a;margin-top:.4rem">✅ 정답</p>`;
-            } else { card.style.opacity='0.35'; card.style.filter='grayscale(1)'; }
-        });
-    } else if(q.type==='multi'){
-        q.choices.forEach((c,j)=>{
-            const card=document.getElementById('choice-card-'+j);
-            if(!card) return;
-            const isAns=(c===q.ans)||(String(j+1)===String(q.ans))||(nums[j]===q.ans);
-            if(isAns){
-                card.style.background='#dcfce7'; card.style.border='3px solid #22c55e'; card.style.boxShadow='0 0 0 3px #bbf7d0';
-                const badge=document.createElement('span');
-                badge.style.cssText='margin-left:auto;font-size:1rem;font-weight:900;color:#16a34a;flex-shrink:0';
-                badge.innerText='✅'; card.appendChild(badge);
-                card.querySelectorAll('span').forEach(s=>{ if(!s.isSameNode(badge)) s.style.color='#166534'; });
-            } else { card.style.opacity='0.35'; card.style.filter='grayscale(1)'; }
-        });
-    } else {
-        const card=document.getElementById('choice-card-short');
-        if(card){
-            card.style.background='#dcfce7'; card.style.border='3px solid #22c55e'; card.style.boxShadow='0 0 0 3px #bbf7d0';
-            card.innerHTML=`<p style="font-size:.75rem;font-weight:700;color:#16a34a;margin-bottom:.2rem">✅ 정답</p><p style="font-size:1.6rem;font-weight:900;color:#166534">${q.ans}</p>`;
-        }
-    }
-    if(q.desc){
-        const preview=document.getElementById('game-preview');
-        const existing=preview.querySelector('.ans-desc-line');
-        if(!existing){
-            const desc=document.createElement('p');
-            desc.className='ans-desc-line';
-            desc.style.cssText='margin-top:.85rem;font-size:.9rem;color:#15803d;font-weight:600;line-height:1.5;padding:.6rem .85rem;background:#f0fdf4;border-radius:.55rem;border-left:3px solid #22c55e';
-            desc.innerHTML='💡 '+q.desc;
-            preview.querySelector('div').appendChild(desc);
-        }
-    }
-    const answers = getAnswers(gs.qIdx);
-    const corrects=answers.filter(a=>q.type==='short'?a.choice.trim().toLowerCase()===q.ans.trim().toLowerCase():a.choice===q.ans).sort((a,b)=>a.elapsed-b.elapsed);
-    const el=document.getElementById('correct-list');
-    el.innerHTML=corrects.length
-        ?`<p style="font-size:.8rem;font-weight:700;color:#10b981;margin-bottom:.6rem">✅ 정답자 ${corrects.length}명</p>`+
-          corrects.map((a,i)=>`<div style="display:flex;align-items:center;gap:.75rem;padding:.5rem .75rem;background:#f0fdf4;border-radius:.6rem;margin-bottom:.35rem">
-            <span style="font-size:.8rem;font-weight:900;color:#94a3b8;width:1.5rem">${i+1}</span>
-            <span style="font-weight:800;color:#1e293b;flex:1">${a.nick}</span>
-            <span style="font-size:.78rem;font-weight:700;color:#10b981">${a.elapsed.toFixed(2)}초</span>
-          </div>`).join('')
-        :'<p style="color:#ef4444;font-weight:700;text-align:center;padding:.75rem">정답자가 없습니다.</p>';
-    refreshGamePanel();
-}
-
-function gameEnd() {
-    if(!confirm('게임을 종료하고 결과를 공개하시겠습니까?')) return;
-    setGameState({ state:'ended' });
-    clearInterval(window._ansInt); stopAdminCountdown(); stopAdminPoll();
-    const startWrap = document.getElementById('game-start-wrap');
-    if (startWrap) startWrap.style.display = 'none';
-    // 참여자 최종 점수 speedRanking에 반영
-    const pList = getPlayers();
-    pList.forEach(p=>{
-        const entry={nick:p.nick,score:p.score||0,correct:p.correct||0,time:Math.round(p.totalTime||0)};
-        const ex=speedRanking.find(r=>r.nick===p.nick);
-        if(ex) Object.assign(ex,entry); else speedRanking.push(entry);
-    });
-    speedRanking.sort((a,b)=>b.score-a.score||a.time-b.time);
-    refreshGamePanel();
-    switchAdminTab('data');
-}
-
-function updateAnswerDist(final=false) {
-    const gs = getGameState();
-    if(gs.qIdx<0) return;
-    const q=customQuestions[gs.qIdx], el=document.getElementById('answer-dist');
-    const answers = getAnswers(gs.qIdx);
-    const total=answers.length;
-    if(!total){el.innerHTML='<p style="color:#cbd5e1;font-size:.85rem;font-weight:700;text-align:center;padding:1rem">아직 응답이 없습니다.</p>';return;}
-    let opts=q.type==='ox'?['O','X']:q.type==='multi'?q.choices:[...new Set(answers.map(a=>a.choice))];
-    const cnts={};
-    opts.forEach(o=>cnts[o]=0);
-    answers.forEach(a=>{if(cnts[a.choice]!==undefined)cnts[a.choice]++;});
-    el.innerHTML=`<p style="font-size:.78rem;font-weight:700;color:#94a3b8;margin-bottom:.75rem">총 ${total}명 응답${final?' (최종)':' (수집 중...)'}</p>`+
-        Object.entries(cnts).map(([opt,cnt])=>{
-            const pct=Math.round(cnt/total*100), isAns=final&&opt===q.ans;
-            return`<div style="margin-bottom:.5rem">
-                <div style="display:flex;justify-content:space-between;margin-bottom:.2rem">
-                    <span style="font-size:.82rem;font-weight:900;color:${isAns?'#10b981':'#1e293b'}">${opt}${isAns?' ✅':''}</span>
-                    <span style="font-size:.78rem;font-weight:700;color:#94a3b8">${cnt}명 (${pct}%)</span>
-                </div>
-                <div style="background:#f1f5f9;border-radius:9999px;height:.7rem;overflow:hidden">
-                    <div style="height:100%;background:${isAns?'#10b981':'#eab308'};border-radius:9999px;width:${pct}%;transition:width .4s"></div>
-                </div></div>`;
-        }).join('');
-}
-
-function lottery(mode) {
-    const gs = getGameState();
-    if(gs.qIdx<0) return alert('문제를 먼저 공개하세요.');
-    const q=customQuestions[gs.qIdx];
-    const answers=getAnswers(gs.qIdx);
-    const corrects=answers.filter(a=>q.type==='short'?a.choice.trim().toLowerCase()===q.ans.trim().toLowerCase():a.choice===q.ans).sort((a,b)=>a.elapsed-b.elapsed);
-    if(!corrects.length) return alert('정답자가 없습니다.');
-    const resEl=document.getElementById('lottery-result');
-    if(mode==='asc'||mode==='desc'){
-        const winner=mode==='asc'?corrects[0]:corrects[corrects.length-1];
-        bgmLottery(()=>{
-            resEl.style.display='block';
-            document.getElementById('lottery-winner').innerText=winner.nick;
-            document.getElementById('lottery-time').innerText=`풀이시간: ${winner.elapsed.toFixed(2)}초`;
-        });
-    } else {
-        resEl.style.display='block';
-        let cnt=0;
-        const roll=setInterval(()=>{
-            const tmp=corrects[Math.floor(Math.random()*corrects.length)];
-            document.getElementById('lottery-winner').innerText=tmp.nick;
-            document.getElementById('lottery-time').innerText='';
-            if(++cnt>20){
-                clearInterval(roll);
-                const winner=corrects[Math.floor(Math.random()*corrects.length)];
-                document.getElementById('lottery-winner').innerText=winner.nick;
-                document.getElementById('lottery-time').innerText=`풀이시간: ${winner.elapsed.toFixed(2)}초`;
-                bgmLottery();
-            }
-        },75);
-        bgmLottery();
-    }
-}
-
-/* ════════════════════════════════════════
-   참여자 화면 제어
-════════════════════════════════════════ */
-// 참여자 로컬 점수 관리
-let _myScore=0, _myCorrect=0, _myTotalTime=0;
-
-function pushQToPlayer(q,idx) {
-    const introEl=document.getElementById('speed-intro'), quizEl=document.getElementById('speed-quiz');
-    if(!introEl||!quizEl) return;
-    introEl.classList.add('hidden');
-    document.getElementById('speed-result').classList.add('hidden');
-    quizEl.classList.remove('hidden');
-    _playerAnswered=false; _playerQStartTime=Date.now();
-    const total=customQuestions.length;
-    document.getElementById('spd-progress').innerText=`${idx+1} / ${total}`;
-    document.getElementById('spd-score-live').innerText=`점수: ${currentPlayer?currentPlayer.score:0}점`;
-    document.getElementById('spd-feedback').innerText='—';
-    document.getElementById('spd-feedback').style.color='#cbd5e1';
-    document.getElementById('spd-timer-bar').style.width='100%';
-    document.getElementById('spd-desc').classList.add('hidden');
-    document.getElementById('spd-desc').innerText='';
-    document.getElementById('spd-wait-next').classList.add('hidden');
-    document.getElementById('spd-tag').innerText=q.tag||'퀴즈';
-    document.getElementById('spd-question').innerText=q.q;
-    const mob2 = isMobile();
-    const nums2=['①','②','③','④','⑤'];
-    const choicesEl=document.getElementById('spd-choices');
-    if(q.type==='ox'){
-        const oxSize = mob2 ? 'width:88px;height:88px;font-size:2.2rem' : 'width:130px;height:130px;font-size:3.5rem';
-        choicesEl.innerHTML=`
-            <button class="ox-btn ox-btn-o" style="${oxSize};border-radius:50%;font-weight:900;border:4px solid #fda4af;background:#fff1f2;color:#db2777;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center" onclick="playerAnswer('O')" id="p-btn-O">O</button>
-            <button class="ox-btn ox-btn-x" style="${oxSize};border-radius:50%;font-weight:900;border:4px solid #93c5fd;background:#eff6ff;color:#3b82f6;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center" onclick="playerAnswer('X')" id="p-btn-X">X</button>`;
-    } else if(q.type==='multi'){
-        const mobGrid = mob2 ? 'width:100%;max-width:28rem' : 'width:100%;max-width:28rem';
-        choicesEl.innerHTML=`<div style="display:flex;flex-direction:column;gap:.5rem;${mobGrid}">`+
-            q.choices.map((c,i)=>`<button onclick="playerAnswer('${c.replace(/'/g,"\\'")}')" id="p-btn-${i}"
-                style="padding:.7rem 1rem;border:2px solid #e2e8f0;border-radius:.9rem;font-size:${mob2?'.85rem':'.92rem'};font-weight:700;cursor:pointer;background:white;text-align:left;transition:all .2s;display:flex;align-items:center;gap:.5rem"
-                onmouseover="this.style.borderColor='#eab308';this.style.background='#fefce8'"
-                onmouseout="this.style.borderColor='#e2e8f0';this.style.background='white'">
-                <span style="font-weight:900;color:#92400e;min-width:1.3rem">${nums2[i]}</span>${c}</button>`).join('')+`</div>`;
-    } else {
-        choicesEl.innerHTML=`<div style="width:100%;max-width:28rem">
-            <input type="text" id="p-short-input" placeholder="답을 입력하세요"
-                style="width:100%;padding:.9rem 1.2rem;border:2px solid #e2e8f0;border-radius:.9rem;font-size:1rem;font-weight:700;outline:none"
-                onfocus="this.style.borderColor='#eab308'" onblur="this.style.borderColor='#e2e8f0'"
-                onkeydown="if(event.key==='Enter'){const v=this.value.trim();if(v)playerAnswer(v);}">
-            <button onclick="const v=document.getElementById('p-short-input').value.trim();if(v)playerAnswer(v);"
-                style="margin-top:.5rem;width:100%;padding:.8rem;background:#eab308;color:white;border:none;border-radius:.9rem;font-size:.95rem;font-weight:900;cursor:pointer">제출</button>
-        </div>`;
-    }
-    let tLeft=10;
-    clearInterval(_playerTimerBar);
-    _playerTimerBar=setInterval(()=>{
-        tLeft-=0.1;
-        document.getElementById('spd-timer-bar').style.width=Math.max(0,tLeft/10*100)+'%';
-        if(tLeft<=0){
-            clearInterval(_playerTimerBar);
-            if(!_playerAnswered){
-                _playerAnswered=true; disablePlayerBtns();
-                document.getElementById('spd-feedback').innerText='⏱ 시간 초과!';
-                document.getElementById('spd-feedback').style.color='#f97316';
-                document.getElementById('spd-wait-next').classList.remove('hidden');
-                currentAnswers.push({nick:currentPlayer?currentPlayer.nick:'?',choice:'__timeout__',elapsed:10});
-            }
-        }
-    },100);
-}
-
-function playerAnswer(choice) {
-    if(_playerAnswered||!choice) return;
-    _playerAnswered=true; clearInterval(_playerTimerBar);
-    const elapsed=(Date.now()-_playerQStartTime)/1000;
-    const gs = getGameState();
-    const nick = currentPlayer ? currentPlayer.nick : '?';
-    saveAnswer(gs.qIdx, nick, choice, elapsed);
-    disablePlayerBtns(choice);
-    document.getElementById('spd-feedback').innerText='✍ 응답 완료! 관리자가 다음 진행을 기다려주세요.';
-    document.getElementById('spd-feedback').style.color='#eab308';
-    document.getElementById('spd-wait-next').classList.remove('hidden');
-}
-
-function disablePlayerBtns(selected) {
-    document.querySelectorAll('#spd-choices button').forEach(b=>{b.disabled=true;b.style.opacity='.5';b.style.cursor='not-allowed';});
-    const inp=document.getElementById('p-short-input'); if(inp) inp.disabled=true;
-    if(selected){
-        const gs = getGameState();
-        const q = gs.q;
-        if(q&&q.type==='ox'){
-            const b=document.getElementById('p-btn-'+selected);
-            if(b){b.style.opacity='1';b.style.background=selected==='O'?'#db2777':'#3b82f6';b.style.borderColor=selected==='O'?'#db2777':'#3b82f6';}
-        }
-    }
-}
-
-/* ════════════════════════════════════════
-   파트 2 — 닉네임 입력 & 게임 진입
-════════════════════════════════════════ */
-function handleStart2() {
-    const nick=document.getElementById('user-nick2').value.trim();
-    if(!nick) return alert('닉네임을 입력해주세요.');
-    const pList = getPlayers();
-    if(pList.some(p => p.nick === nick)) {
-        return alert(`"${nick}" 닉네임은 이미 수료평가에 참여 중입니다.\n다른 닉네임을 사용해주세요.`);
-    }
-    userData2.nick=nick; userData.nick=nick;
-    if(!nicknames.some(x=>x.n===nick)) nicknames.push({n:nick,v:0});
-    registerPlayerLS(nick);
-    currentPlayer = { nick, score:0, correct:0, totalTime:0 };
-    _myScore=0; _myCorrect=0; _myTotalTime=0;
-
-    document.getElementById('speed-intro').classList.remove('hidden');
-    document.getElementById('speed-quiz').classList.add('hidden');
-    document.getElementById('speed-result').classList.add('hidden');
-
-    const before  = document.getElementById('player-before-start');
-    const started = document.getElementById('player-quiz-started');
-    const gs = getGameState();
-
-    if (gs.state === 'idle') {
-        if (before)  before.style.display = 'block';
-        if (started) started.style.display = 'none';
-    } else if (gs.state === 'started') {
-        if (before)  before.style.display = 'none';
-        if (started) started.style.display = 'block';
-    } else if ((gs.state === 'showing' || gs.state === 'revealed') && gs.q) {
-        if (before)  before.style.display = 'none';
-        if (started) started.style.display = 'none';
-        pushQToPlayer(gs.q, gs.qIdx);
-    }
-    showSection('step-speed');
-    startPlayerPoll();
-}
-
-/* ────── 참여자 목록 렌더 (관리자 게임진행 탭) ────── */
-function renderPlayerList(pList) {
-    const el = document.getElementById('player-list-wrap');
-    if (!el) return;
-    if (!pList.length) {
-        el.innerHTML = '<p style="font-size:.8rem;color:#cbd5e1;font-weight:700;text-align:center;padding:.5rem">아직 입장한 참여자가 없습니다.</p>';
-        return;
-    }
-    el.innerHTML = pList.map(p =>
-        `<span style="display:inline-flex;align-items:center;gap:.35rem;background:#f8fafc;border:1px solid #e2e8f0;border-radius:9999px;padding:.3rem .75rem;font-size:.78rem;font-weight:700;color:#1e293b">
-            <span style="width:.55rem;height:.55rem;background:#22c55e;border-radius:50%;display:inline-block"></span>${p.nick}
-        </span>`).join('');
-}
-
-/* ════════════════════════════════════════
-   파트 2 대시보드
-════════════════════════════════════════ */
-function renderDashboard2(fromLanding=false) {
-    showSection('step-dashboard2');
-    stopPlayerPoll(); // 결과 화면에서는 폴링 중단
-    const myNick = userData2.nick || userData.nick;
-    // localStorage에서 최신 점수 읽기
-    const pList  = getPlayers();
-    const meLS   = pList.find(p => p.nick === myNick);
-    const myData = meLS || currentPlayer || null;
-    const el = document.getElementById('my-result-board');
-    if (!el) return;
-
-    const totalQ  = customQuestions.length || 10;
-    // 전체 순위: localStorage 참여자 목록 점수 기준 정렬
-    const sorted  = [...pList].sort((a,b) => (b.score||0)-(a.score||0) || (a.totalTime||0)-(b.totalTime||0));
-    const rankNum = myNick ? sorted.findIndex(p=>p.nick===myNick)+1 : null;
-    const total   = sorted.length;
-
-    if (!myData && !currentPlayer) {
-        el.innerHTML = '<p class="text-slate-300 font-bold">게임을 완료하면 결과가 표시됩니다.</p>';
-        return;
-    }
-
-    const score   = myData ? myData.score   : (currentPlayer ? currentPlayer.score   : 0);
-    const correct = myData ? myData.correct : (currentPlayer ? currentPlayer.correct : 0);
-    const time    = myData ? myData.time    : (currentPlayer ? Math.round(currentPlayer.totalTime) : 0);
-    const pct     = totalQ > 0 ? Math.round((correct / totalQ) * 100) : 0;
-
-    // 등수 뱃지
-    const rankBadge = rankNum
-        ? (rankNum === 1 ? '🥇 1등' : rankNum === 2 ? '🥈 2등' : rankNum === 3 ? '🥉 3등' : `${rankNum}등`)
-        : '집계 중';
-    const rankColor = rankNum === 1 ? '#f59e0b' : rankNum === 2 ? '#94a3b8' : rankNum === 3 ? '#cd7c2e' : '#64748b';
-
-    // 점수에 따른 메시지
-    let msg = '', msgColor = '#64748b';
-    if (pct === 100)      { msg = '🎉 완벽한 수료! 모든 문제를 맞혔습니다!'; msgColor = '#16a34a'; }
-    else if (pct >= 80)   { msg = '👏 훌륭합니다! 충분한 실력을 입증했어요.'; msgColor = '#2563eb'; }
-    else if (pct >= 60)   { msg = '🙂 잘 하셨습니다! 조금만 더 다듬으면 완벽해요.'; msgColor = '#ca8a04'; }
-    else if (pct >= 40)   { msg = '💪 아쉽지만 다음엔 더 잘하실 수 있어요!'; msgColor = '#ea580c'; }
-    else                  { msg = '📚 복습이 필요할 것 같아요. 함께 다시 배워봐요!'; msgColor = '#dc2626'; }
-
-    el.innerHTML = `
-        <!-- 닉네임 + 등수 -->
-        <div>
-            <p style="font-size:.85rem;font-weight:700;color:#94a3b8;margin-bottom:.35rem">참여자</p>
-            <p style="font-size:1.6rem;font-weight:900;color:#1e293b">${myNick || '—'}</p>
-        </div>
-
-        <!-- 등수 뱃지 (크게) -->
-        <div style="display:inline-flex;flex-direction:column;align-items:center;gap:.4rem;
-            background:${rankNum && rankNum<=3 ? 'linear-gradient(135deg,'+rankColor+'33,'+rankColor+'11)' : '#f8fafc'};
-            border:2px solid ${rankNum ? rankColor : '#e2e8f0'};
-            border-radius:1.5rem;padding:1.5rem 2.5rem;margin:0 auto">
-            <span style="font-size:3rem;line-height:1">${rankNum===1?'🥇':rankNum===2?'🥈':rankNum===3?'🥉':'📋'}</span>
-            <p style="font-size:2rem;font-weight:900;color:${rankColor}">${rankBadge}</p>
-            ${total > 0 ? `<p style="font-size:.78rem;font-weight:700;color:#94a3b8">전체 ${total}명 중</p>` : ''}
-        </div>
-
-        <!-- 세부 점수 -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;max-width:340px;margin:0 auto">
-            <div style="background:#fefce8;border-radius:1rem;padding:1rem;text-align:center;border:2px solid #fde68a">
-                <p style="font-size:.72rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">점수</p>
-                <p style="font-size:1.8rem;font-weight:900;color:#eab308">${score}</p>
-                <p style="font-size:.65rem;color:#94a3b8;font-weight:700">점</p>
-            </div>
-            <div style="background:#f0fdf4;border-radius:1rem;padding:1rem;text-align:center;border:2px solid #86efac">
-                <p style="font-size:.72rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">정답</p>
-                <p style="font-size:1.8rem;font-weight:900;color:#16a34a">${correct}</p>
-                <p style="font-size:.65rem;color:#94a3b8;font-weight:700">/ ${totalQ}문제</p>
-            </div>
-            <div style="background:#f8fafc;border-radius:1rem;padding:1rem;text-align:center;border:2px solid #e2e8f0">
-                <p style="font-size:.72rem;font-weight:700;color:#94a3b8;margin-bottom:.25rem">풀이시간</p>
-                <p style="font-size:1.8rem;font-weight:900;color:#64748b">${time}</p>
-                <p style="font-size:.65rem;color:#94a3b8;font-weight:700">초</p>
-            </div>
-        </div>
-
-        <!-- 정답률 바 -->
-        <div style="max-width:340px;margin:0 auto;text-align:left">
-            <div style="display:flex;justify-content:space-between;margin-bottom:.35rem">
-                <span style="font-size:.78rem;font-weight:700;color:#64748b">정답률</span>
-                <span style="font-size:.78rem;font-weight:900;color:${msgColor}">${pct}%</span>
-            </div>
-            <div style="background:#f1f5f9;border-radius:9999px;height:.7rem;overflow:hidden">
-                <div style="height:100%;background:${pct>=80?'#22c55e':pct>=60?'#eab308':'#f97316'};border-radius:9999px;width:${pct}%;transition:width .6s ease"></div>
-            </div>
-        </div>
-
-        <!-- 메시지 -->
-        <p style="font-size:1rem;font-weight:700;color:${msgColor};padding:.75rem 1.25rem;background:${msgColor}11;border-radius:.75rem;max-width:340px;margin:0 auto">${msg}</p>`;
-}
-function renderSpeedRanking() {
-    const rowEl=document.getElementById('speed-ranking-row'), restEl=document.getElementById('speed-ranking-rest');
-    if(!speedRanking.length){rowEl.innerHTML='<div style="text-align:center;padding:2.5rem;color:#cbd5e1;font-weight:700">아직 수료평가 참여 기록이 없습니다.</div>';restEl.innerHTML='';return;}
-    const myNick=userData2.nick||userData.nick, myRank=speedRanking.findIndex(r=>r.nick===myNick), myData=myRank>=0?speedRanking[myRank]:null;
-    const medals=['🥇','🥈','🥉'], grads=['linear-gradient(135deg,#fbbf24,#f59e0b)','linear-gradient(135deg,#94a3b8,#64748b)','linear-gradient(135deg,#cd7c2e,#a16207)'];
-    const top3=speedRanking.slice(0,3);
-    rowEl.innerHTML=`<div class="spd-rank-row" style="display:flex;flex-direction:column;gap:1rem">
-        <div style="display:flex;flex-wrap:wrap;gap:.75rem;flex:1">
-            ${top3.map((r,i)=>`<div style="flex:1;min-width:8rem;border-radius:1.25rem;padding:1.25rem;color:white;display:flex;flex-direction:column;gap:.5rem;background:${grads[i]}">
-                <div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:1.8rem">${medals[i]}</span><span style="font-size:.65rem;font-weight:900;opacity:.75;background:rgba(255,255,255,.2);padding:.15rem .5rem;border-radius:9999px">${i+1}등</span></div>
-                <p style="font-weight:900;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nick}</p>
-                <p style="font-size:1.7rem;font-weight:900">${r.score}<span style="font-size:.8rem;opacity:.8">점</span></p>
-                <p style="font-size:.7rem;opacity:.8;font-weight:700">정답 ${r.correct}개 · ${r.time}초</p>
-            </div>`).join('')}
-            ${top3.length<3?Array(3-top3.length).fill(0).map(()=>`<div style="flex:1;min-width:8rem;border-radius:1.25rem;padding:1.25rem;background:#f8fafc;border:2px dashed #e2e8f0;display:flex;align-items:center;justify-content:center"><span style="color:#cbd5e1;font-weight:700;font-size:.85rem">대기중</span></div>`).join(''):''}
-        </div>
-        <div style="border-radius:1.25rem;padding:1.25rem;border:2px solid ${myData?'#fde68a':'#f1f5f9'};background:${myData?'#fefce8':'#f8fafc'}">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-                <span style="font-size:.75rem;font-weight:900;color:${myData?'#eab308':'#94a3b8'}">내 순위</span>
-                <span style="font-size:.7rem;font-weight:900;color:${myData?'#eab308':'#94a3b8'};background:${myData?'#fef9c3':'#f1f5f9'};padding:.15rem .55rem;border-radius:9999px">${myData?(myRank+1)+'위':'-'}</span>
-            </div>
-            <p style="font-weight:900;font-size:.95rem;color:#1e293b">${myData?myData.nick:(myNick||'—')}</p>
-            <p style="font-size:1.6rem;font-weight:900;color:${myData?'#eab308':'#cbd5e1'}">${myData?myData.score:'—'}<span style="font-size:.8rem;opacity:.6">${myData?'점':''}</span></p>
-            <p style="font-size:.72rem;font-weight:700;color:${myData?'#64748b':'#cbd5e1'}">${myData?`정답 ${myData.correct}개 · ${myData.time}초`:'수료평가 미참여'}</p>
-        </div>
-    </div>`;
-    restEl.innerHTML=speedRanking.length>3
-        ?'<div style="margin-top:.5rem">'+speedRanking.slice(3).map((r,i)=>{const isMe=r.nick===myNick;return`<div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 1.25rem;border-radius:1rem;margin-bottom:.35rem;border:1px solid ${isMe?'#fde68a':'#f1f5f9'};background:${isMe?'#fefce8':'white'}"><span style="font-weight:900;font-size:.82rem;color:${isMe?'#eab308':'#94a3b8'}">${i+4}위</span><span style="font-weight:800;color:${isMe?'#ca8a04':'#1e293b'}">${r.nick}${isMe?' 👈 나':''}</span><span style="font-size:.75rem;color:#94a3b8;font-weight:700">정답 ${r.correct}개 · ${r.time}초</span><span style="font-weight:900;color:#eab308">${r.score}점</span></div>`;}).join('')+'</div>':'';
-}
-
-/* ════════════════════════════════════════
-   Top 5 순위 대시보드
-════════════════════════════════════════ */
-function renderTop5() {
-    const el = document.getElementById('top5-board');
-    if (!el) return;
-    const top5 = speedRanking.slice(0, 5);
-    if (!top5.length) {
-        el.innerHTML = '<p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.9rem;font-weight:700">아직 수료평가 참여자가 없습니다.</p>';
-        return;
-    }
-    const medals  = ['🥇','🥈','🥉','4️⃣','5️⃣'];
-    const rankBg  = ['linear-gradient(135deg,#fbbf24,#f59e0b)','linear-gradient(135deg,#94a3b8,#64748b)','linear-gradient(135deg,#cd7c2e,#a16207)','#f8fafc','#f8fafc'];
-    const myNick  = userData2.nick || userData.nick;
-    el.innerHTML = top5.map((r, i) => {
-        const isMe = r.nick === myNick;
-        return `<div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:1.25rem;margin-bottom:.6rem;background:${i<3?rankBg[i]:(isMe?'#fefce8':'#f8fafc')};border:${isMe&&i>=3?'2px solid #fde68a':'2px solid transparent'};box-shadow:${i<3?'0 4px 12px rgba(0,0,0,.1)':'none'}">
-            <span style="font-size:1.8rem;min-width:2rem;text-align:center">${medals[i]}</span>
-            <div style="flex:1;min-width:0">
-                <p style="font-size:1rem;font-weight:900;color:${i<3?'white':'#1e293b'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nick}${isMe?' <span style="font-size:.7rem;opacity:.8">👈 나</span>':''}</p>
-                <p style="font-size:.72rem;font-weight:700;color:${i<3?'rgba(255,255,255,.75)':'#94a3b8'};margin-top:.1rem">정답 ${r.correct}개 &nbsp;·&nbsp; 풀이시간 ${r.time}초</p>
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-                <p style="font-size:1.6rem;font-weight:900;color:${i<3?'#fff':'#eab308'};line-height:1">${r.score}</p>
-                <p style="font-size:.65rem;font-weight:700;color:${i<3?'rgba(255,255,255,.7)':'#94a3b8'}">점</p>
-            </div>
-        </div>`;
-    }).join('');
-}
-
-/* ════════════════════════════════════════
-   닉네임 투표
-════════════════════════════════════════ */
-function renderGridVote() {
-    const grid=document.getElementById('lucky-grid');
-    if(!nicknames.length){grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:#cbd5e1;font-weight:700;padding:1.5rem">참여자 닉네임이 없습니다.</div>';return;}
-    grid.innerHTML=[...nicknames].sort((a,b)=>b.v-a.v).map(n=>`
-        <div class="nick-card bg-white p-4 rounded-2xl text-center" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4rem">
-            <span style="font-size:.82rem;font-weight:900;color:#1e293b;word-break:keep-all">${n.n}</span>
-            <span style="font-size:.65rem;color:#eab308;font-weight:700">${n.v}표 획득</span>
-            <button onclick="vote('${n.n}')"
-                style="width:100%;padding:.4rem;background:#f8fafc;border:1px solid #fef9c3;border-radius:.5rem;font-size:.7rem;font-weight:900;color:#eab308;cursor:pointer;transition:all .2s"
-                onmouseover="this.style.background='#eab308';this.style.color='white'"
-                onmouseout="this.style.background='#f8fafc';this.style.color='#eab308'">투표</button>
-        </div>`).join('');
-    document.getElementById('vote-info').innerText=`가장 마음에 드는 닉네임을 선택하세요! (내 투표권: ${2-voteCount}개 남음)`;
-}
-function vote(name){
-    if(voteCount>=2) return alert('최대 2개까지만 투표 가능합니다!');
-    const t=nicknames.find(x=>x.n===name); if(t){t.v++;voteCount++;renderGridVote();}
-}
-
-/* ════════════════════════════════════════
-   관리자 — 로그인 모달
-════════════════════════════════════════ */
-const ADMIN_PW='rnao!234'; let pendingAdminPart=0;
-function openAdminLogin(part){pendingAdminPart=part;document.getElementById('admin-pw-input').value='';document.getElementById('admin-pw-error').innerText='';document.getElementById('admin-modal').style.display='flex';setTimeout(()=>document.getElementById('admin-pw-input').focus(),100);}
-function closeAdminModal(){document.getElementById('admin-modal').style.display='none';}
-function confirmAdminLogin(){const pw=document.getElementById('admin-pw-input').value;if(pw===ADMIN_PW){closeAdminModal();if(pendingAdminPart===1)openAdmin1();else openAdmin2();}else{document.getElementById('admin-pw-error').innerText='비밀번호가 올바르지 않습니다.';document.getElementById('admin-pw-input').value='';document.getElementById('admin-pw-input').focus();}}
-
-/* ════════════════════════════════════════
-   관리자 — 파트1
-════════════════════════════════════════ */
-function openAdmin1() {
-    showSection('step-admin1');
-    document.getElementById('adm1-mbti-cnt').innerHTML=allMbti.length+'<span style="font-size:.75rem">명</span>';
-    document.getElementById('adm1-sat-cnt').innerHTML=allSatData.length+'<span style="font-size:.75rem">명</span>';
-    document.getElementById('adm1-bal-cnt').innerHTML=allBalData.length+'<span style="font-size:.75rem">명</span>';
-    document.getElementById('adm1-voc-cnt').innerHTML=vocList.length+'<span style="font-size:.75rem">건</span>';
-    const delEl=document.getElementById('adm1-delete-list');
-    delEl.innerHTML=nicknames.length?nicknames.map(n=>`<button onclick="adminDeletePart1Nick('${n.n}')"
-        style="background:#fff1f2;border:1.5px solid #fecdd3;border-radius:9999px;padding:.35rem .9rem;font-size:.78rem;font-weight:900;color:#e11d48;cursor:pointer;"
-        onmouseover="this.style.background='#e11d48';this.style.color='white'"
-        onmouseout="this.style.background='#fff1f2';this.style.color='#e11d48'">${n.n} ✕</button>`).join('')
-        :'<p style="font-size:.8rem;color:#cbd5e1;font-weight:700">참여자 데이터가 없습니다.</p>';
-    const vocEl=document.getElementById('adm1-voc-list');
-    const icons2={소통:'💬',업무:'🛠',조직:'🏛',결정:'⚖️',성장:'🌱'}, col2={소통:'#3b82f6',업무:'#10b981',조직:'#f59e0b',결정:'#ef4444',성장:'#a855f7'};
-    vocEl.innerHTML=vocList.length?vocList.map((v,i)=>`<div style="background:#f8fafc;border-radius:.75rem;padding:.85rem 1rem;margin-bottom:.5rem;border-left:3px solid ${col2[v.cat]||'#cbd5e1'};display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;flex-wrap:wrap">
-        <div style="flex:1">
-            <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.3rem;flex-wrap:wrap">
-                <span style="font-size:.7rem;font-weight:900;color:${col2[v.cat]||'#64748b'};background:${col2[v.cat]||'#e2e8f0'}22;padding:.15rem .5rem;border-radius:9999px">${icons2[v.cat]||'📝'} ${v.cat}</span>
-                <span style="font-size:.7rem;color:#94a3b8;font-weight:700">${v.nick}</span>
-                <span style="font-size:.65rem;color:#cbd5e1;font-weight:600">${v.time}</span>
-            </div>
-            <p style="font-size:.85rem;color:#334155;font-weight:600;line-height:1.5">${v.text}</p>
-        </div>
-        <button onclick="adminDeleteVoc(${i})" style="background:#fee2e2;border:none;border-radius:.5rem;padding:.3rem .6rem;font-size:.72rem;font-weight:900;color:#ef4444;cursor:pointer;flex-shrink:0"
-            onmouseover="this.style.background='#ef4444';this.style.color='white'"
-            onmouseout="this.style.background='#fee2e2';this.style.color='#ef4444'">삭제</button>
-    </div>`).join(''):'<p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">접수된 VOC가 없습니다.</p>';
-}
-function adminDeletePart1Nick(nick){
-    if(!confirm(`"${nick}" 참여자의 모든 파트1 데이터를 삭제하시겠습니까?`)) return;
-    const idx=nicknames.findIndex(n=>n.n===nick);
-    if(idx>=0){if(idx<allMbti.length)allMbti.splice(idx,1);if(idx<allSatData.length)allSatData.splice(idx,1);if(idx<allBalData.length)allBalData.splice(idx,1);nicknames.splice(idx,1);}
-    for(let i=vocList.length-1;i>=0;i--){if(vocList[i].nick===nick)vocList.splice(i,1);}
-    savePart1();
-    openAdmin1();
-}
-function adminDeleteVoc(idx){if(!confirm('이 VOC 항목을 삭제하시겠습니까?')) return; vocList.splice(idx,1); savePart1(); openAdmin1();}
-function adminReset1(){if(!confirm('파트1의 모든 데이터를 초기화하시겠습니까?')) return; allMbti=[];allSatData=[];allBalData=[];vocList=[];nicknames=nicknames.filter(n=>speedRanking.some(r=>r.nick===n.n));savePart1();openAdmin1();alert('파트1 데이터가 초기화되었습니다.');}
-function adminDownloadAll1(){
-    if(!allMbti.length&&!vocList.length) return alert('다운로드할 데이터가 없습니다.');
-    const bom='\uFEFF'; let csv='파트,닉네임,MBTI,만족도평균,밸런스A비율,VOC카테고리,VOC내용,VOC시간\n';
-    allMbti.forEach((mbti,i)=>{const nick=nicknames[i]?nicknames[i].n:'',satA=allSatData[i]?(allSatData[i].reduce((a,b)=>a+b,0)/allSatData[i].length).toFixed(2):'',balA=allBalData[i]?Math.round(allBalData[i].filter(x=>x==='A').length/allBalData[i].length*100)+'%':'';csv+=`파트1,"${nick}","${mbti}","${satA}","${balA}","","",""\n`;});
-    vocList.forEach(v=>{csv+=`VOC,"${v.nick}","","","","${v.cat}","${v.text.replace(/"/g,'""')}","${v.time}"\n`;});
-    const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='구매의봄_파트1_전체_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
-}
-function downloadVoc(){
-    if(!vocList.length) return alert('다운로드할 VOC 데이터가 없습니다.');
-    const bom='\uFEFF',header='번호,닉네임,카테고리,내용,접수시간\n',rows=vocList.map((v,i)=>`${i+1},"${v.nick}","${v.cat}","${v.text.replace(/"/g,'""')}","${v.time}"`).join('\n');
-    const blob=new Blob([bom+header+rows],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='구매의봄_VOC_'+new Date().toISOString().slice(0,10)+'.csv';a.click();URL.revokeObjectURL(url);
-}
-
-/* ════════════════════════════════════════
-   관리자 — 파트2
-════════════════════════════════════════ */
-function openAdmin2(){
-    showSection('step-admin2');
-    // 게임 진행 상태만 초기화 (문제 데이터는 보존)
-    setGameState({ state:'idle', qIdx:-1, q:null });
-    try { localStorage.removeItem(LS_PLAYERS); localStorage.removeItem(LS_ANSWERS); } catch(e) {}
-    switchAdminTab('make');
-}
-
-function refreshDataPanel(){
-    const tv=nicknames.reduce((s,n)=>s+n.v,0);
-    document.getElementById('adm2-spd-cnt').innerHTML=speedRanking.length+'<span style="font-size:.75rem">명</span>';
-    document.getElementById('adm2-vote-cnt').innerHTML=tv+'<span style="font-size:.75rem">표</span>';
-    const delEl=document.getElementById('adm2-delete-list');
-    delEl.innerHTML=speedRanking.length?speedRanking.map((r,i)=>`<button onclick="adminDeleteRank(${i})"
-        style="background:#fefce8;border:1.5px solid #fde68a;border-radius:9999px;padding:.35rem .9rem;font-size:.78rem;font-weight:900;color:#ca8a04;cursor:pointer;"
-        onmouseover="this.style.background='#eab308';this.style.color='white'"
-        onmouseout="this.style.background='#fefce8';this.style.color='#ca8a04'">${r.nick} (${r.score}점) ✕</button>`).join('')
-        :'<p style="font-size:.8rem;color:#cbd5e1;font-weight:700">참여자 데이터가 없습니다.</p>';
-    const rankEl=document.getElementById('adm2-rank-list');
-    rankEl.innerHTML=speedRanking.length?`<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.85rem">
-        <thead><tr style="background:#f8fafc"><th style="padding:.6rem .75rem;text-align:left;font-weight:900;color:#64748b;border-bottom:2px solid #f1f5f9">순위</th><th style="padding:.6rem .75rem;text-align:left;font-weight:900;color:#64748b;border-bottom:2px solid #f1f5f9">닉네임</th><th style="padding:.6rem .75rem;text-align:center;font-weight:900;color:#64748b;border-bottom:2px solid #f1f5f9">점수</th><th style="padding:.6rem .75rem;text-align:center;font-weight:900;color:#64748b;border-bottom:2px solid #f1f5f9">정답수</th><th style="padding:.6rem .75rem;text-align:center;font-weight:900;color:#64748b;border-bottom:2px solid #f1f5f9">풀이시간</th></tr></thead>
-        <tbody>${speedRanking.map((r,i)=>`<tr style="border-bottom:1px solid #f1f5f9;background:${i%2===0?'white':'#fafafa'}"><td style="padding:.6rem .75rem;font-weight:900;color:${i===0?'#f59e0b':i===1?'#94a3b8':i===2?'#cd7c2e':'#94a3b8'}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':(i+1)+'위'}</td><td style="padding:.6rem .75rem;font-weight:700;color:#1e293b">${r.nick}</td><td style="padding:.6rem .75rem;text-align:center;font-weight:900;color:#eab308">${r.score}점</td><td style="padding:.6rem .75rem;text-align:center;font-weight:700;color:#64748b">${r.correct}개</td><td style="padding:.6rem .75rem;text-align:center;font-weight:700;color:#64748b">${r.time}초</td></tr>`).join('')}</tbody>
-    </table></div>`:'<p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">참여 데이터가 없습니다.</p>';
-    const voteEl=document.getElementById('adm2-vote-list');
-    const sorted=[...nicknames].sort((a,b)=>b.v-a.v).filter(n=>n.v>0),maxV=sorted.length?sorted[0].v:1;
-    voteEl.innerHTML=sorted.length?sorted.map((n,i)=>`<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem">
-        <span style="font-size:.8rem;font-weight:900;color:#94a3b8;width:2rem;text-align:right">${i+1}위</span>
-        <span style="font-weight:800;color:#1e293b;width:8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n.n}</span>
-        <div style="flex:1;background:#f1f5f9;border-radius:9999px;height:.6rem;overflow:hidden"><div style="height:100%;background:#db2777;border-radius:9999px;width:${Math.round(n.v/maxV*100)}%"></div></div>
-        <span style="font-weight:900;color:#db2777;font-size:.85rem;width:3rem;text-align:right">${n.v}표</span>
-    </div>`).join(''):'<p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">투표 데이터가 없습니다.</p>';
-
-    // 관리자용 Top5 순위
-    renderAdminTop5();
-}
-function renderAdminTop5() {
-    const el = document.getElementById('adm2-top5-board');
-    if (!el) return;
-    const top5 = speedRanking.slice(0, 5);
-    if (!top5.length) {
-        el.innerHTML = '<p style="text-align:center;padding:2rem;color:#cbd5e1;font-size:.85rem;font-weight:700">수료평가 참여자가 없습니다.</p>';
-        return;
-    }
-    const medals = ['🥇','🥈','🥉','4위','5위'];
-    const rankBg = [
-        'linear-gradient(135deg,#fbbf24,#f59e0b)',
-        'linear-gradient(135deg,#94a3b8,#64748b)',
-        'linear-gradient(135deg,#cd7c2e,#a16207)',
-        '#f8fafc','#f8fafc'
-    ];
-    el.innerHTML = top5.map((r, i) => `
-        <div style="display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:1.25rem;margin-bottom:.6rem;
-            background:${rankBg[i]};border:2px solid transparent;
-            box-shadow:${i<3?'0 4px 12px rgba(0,0,0,.1)':'none'}">
-            <span style="font-size:${i<3?'1.8rem':'1rem'};font-weight:900;min-width:2.2rem;text-align:center;color:${i<3?'white':'#64748b'}">${medals[i]}</span>
-            <div style="flex:1;min-width:0">
-                <p style="font-size:1rem;font-weight:900;color:${i<3?'white':'#1e293b'};overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${r.nick}</p>
-                <p style="font-size:.72rem;font-weight:700;color:${i<3?'rgba(255,255,255,.75)':'#94a3b8'};margin-top:.1rem">
-                    정답 ${r.correct}개 &nbsp;·&nbsp; 풀이시간 ${r.time}초
-                </p>
-            </div>
-            <div style="text-align:right;flex-shrink:0">
-                <p style="font-size:1.6rem;font-weight:900;color:${i<3?'#fff':'#eab308'};line-height:1">${r.score}</p>
-                <p style="font-size:.65rem;font-weight:700;color:${i<3?'rgba(255,255,255,.7)':'#94a3b8'}">점</p>
-            </div>
-        </div>`).join('');
-}
-
-function adminDeleteRank(idx){if(!confirm(`"${speedRanking[idx].nick}" 참여자의 랭킹을 삭제하시겠습니까?`)) return; speedRanking.splice(idx,1); refreshDataPanel();}
-function adminReset2(){
-    if(!confirm('파트2의 모든 데이터를 초기화하시겠습니까?')) return;
-    speedRanking=[];voteCount=0;
-    nicknames=nicknames.filter(n=>allMbti.some((_,i)=>nicknames[i]&&nicknames[i].n===n.n));
-    nicknames.forEach(n=>n.v=0);
-    setGameState({state:'idle',qIdx:-1,q:null});
-    try{localStorage.removeItem(LS_PLAYERS);localStorage.removeItem(LS_ANSWERS);}catch(e){}
     stopAdminPoll();
     refreshDataPanel();
     alert('파트2 데이터가 초기화되었습니다.');
