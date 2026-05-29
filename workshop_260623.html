@@ -410,7 +410,7 @@
             <button onclick="openFbModal()" id="fb-connect-btn"
                 style="background:none;border:1px solid #fde68a;color:#d97706;font-size:.75rem;font-weight:700;cursor:pointer;padding:.4rem .9rem;border-radius:.5rem;transition:all .2s"
                 onmouseover="this.style.background='#fef9c3'" onmouseout="this.style.background='none'">
-                🔥 Firebase 연결
+                🔥 Firebase 연결 중...
             </button>
         </div>
     </div>
@@ -749,32 +749,6 @@
 
         <button onclick="goToLanding()" class="w-full bg-white border-2 border-slate-100 text-slate-400 py-6 rounded-3xl font-black text-xl hover:text-yellow-500 transition shadow-sm">← 처음으로</button>
     </section>
-    <!-- Firebase 설정 모달 -->
-    <div id="fb-config-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:2000;align-items:center;justify-content:center">
-        <div style="background:white;border-radius:1.5rem;padding:2rem;width:min(94vw,480px);box-shadow:0 25px 50px rgba(0,0,0,.3)">
-            <div style="text-align:center;margin-bottom:1.25rem">
-                <div style="font-size:1.8rem;margin-bottom:.4rem">🔥</div>
-                <h3 style="font-size:1.15rem;font-weight:900;color:#1e293b;margin-bottom:.3rem">Firebase 실시간 연결 설정</h3>
-                <p style="font-size:.78rem;color:#94a3b8;font-weight:600;line-height:1.6">
-                    다른 기기 간 실시간 연결을 위해 Firebase 정보를 입력하세요.<br>
-                    <a href="https://console.firebase.google.com" target="_blank" style="color:#f59e0b;font-weight:700">Firebase 콘솔 →</a>에서 무료로 생성 가능합니다.
-                </p>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:.55rem;margin-bottom:.9rem">
-                <input id="fb-apiKey"      type="text" placeholder="apiKey"  style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
-                <input id="fb-authDomain"  type="text" placeholder="authDomain (xxx.firebaseapp.com)" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
-                <input id="fb-databaseURL" type="text" placeholder="databaseURL (https://xxx-default-rtdb.firebaseio.com)" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
-                <input id="fb-projectId"   type="text" placeholder="projectId" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
-                <input id="fb-appId"       type="text" placeholder="appId" style="padding:.6rem .9rem;border:1.5px solid #e2e8f0;border-radius:.6rem;font-size:.82rem;font-weight:600;outline:none;width:100%" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
-            </div>
-            <p id="fb-error" style="font-size:.75rem;color:#ef4444;font-weight:700;min-height:1rem;margin-bottom:.6rem;text-align:center"></p>
-            <div style="display:flex;gap:.6rem">
-                <button onclick="closeFbModal()" style="flex:1;padding:.8rem;border:1.5px solid #e2e8f0;border-radius:.75rem;font-weight:900;font-size:.85rem;color:#94a3b8;cursor:pointer;background:white">취소</button>
-                <button onclick="connectFirebase()" style="flex:2;padding:.8rem;background:#f59e0b;border:none;border-radius:.75rem;font-weight:900;font-size:.88rem;color:white;cursor:pointer">🔥 연결하기</button>
-            </div>
-        </div>
-    </div>
-
     <div id="admin-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1000;align-items:center;justify-content:center">
         <div style="background:white;border-radius:1.5rem;padding:2.5rem;width:min(90vw,380px);box-shadow:0 25px 50px -12px rgba(0,0,0,.35);text-align:center">
             <div style="font-size:2rem;margin-bottom:.5rem">🔒</div>
@@ -1370,45 +1344,30 @@ const FB_ROOT = 'gq_session'; // Firebase DB 경로 루트
 
 /* ── Firebase 설정 모달 ── */
 function openFbModal() {
-    // 저장된 설정 불러오기
-    try {
-        const saved = JSON.parse(localStorage.getItem('fb_config') || '{}');
-        ['apiKey','authDomain','databaseURL','projectId','appId'].forEach(k => {
-            const el = document.getElementById('fb-'+k);
-            if (el && saved[k]) el.value = saved[k];
-        });
-    } catch(e) {}
-    document.getElementById('fb-config-modal').style.display = 'flex';
+    if (fbReady) {
+        alert('✅ Firebase 실시간 연결 중입니다.\n프로젝트: workshop260623');
+    } else {
+        alert('⏳ Firebase 연결 중입니다. 잠시 후 다시 확인해주세요.');
+    }
 }
-function closeFbModal() { document.getElementById('fb-config-modal').style.display = 'none'; }
+function closeFbModal() {}
 
 function connectFirebase() {
-    const config = {
-        apiKey:      document.getElementById('fb-apiKey').value.trim(),
-        authDomain:  document.getElementById('fb-authDomain').value.trim(),
-        databaseURL: document.getElementById('fb-databaseURL').value.trim(),
-        projectId:   document.getElementById('fb-projectId').value.trim(),
-        appId:       document.getElementById('fb-appId').value.trim(),
-    };
     const errEl = document.getElementById('fb-error');
-    if (!config.databaseURL) { errEl.innerText = 'databaseURL을 입력해주세요.'; return; }
-    errEl.innerText = '연결 중...';
+    if (errEl) errEl.innerText = '연결 중...';
     try {
-        // 이미 초기화된 앱 제거 후 재초기화
-        if (firebase.apps.length) { firebase.apps.forEach(a => a.delete()); }
-        firebase.initializeApp(config);
+        if (firebase.apps.length) firebase.apps.forEach(a => a.delete());
+        firebase.initializeApp(_FB_CONFIG);
         fbDb = firebase.database();
-        // 연결 테스트
         fbDb.ref('.info/connected').once('value').then(snap => {
             fbReady = true;
-            localStorage.setItem('fb_config', JSON.stringify(config));
+            try { localStorage.setItem('fb_config', JSON.stringify(_FB_CONFIG)); } catch(e) {}
             closeFbModal();
             updateFbBtn(true);
             alert('✅ Firebase 연결 성공! 이제 다른 기기와 실시간으로 연결됩니다.');
-            // 참여자 폴링 → Firebase 리스너로 전환
             if (currentPlayer) attachPlayerListener();
-        }).catch(e => { errEl.innerText = '연결 실패: ' + e.message; });
-    } catch(e) { errEl.innerText = '초기화 오류: ' + e.message; }
+        }).catch(e => { if (errEl) errEl.innerText = '연결 실패: ' + e.message; });
+    } catch(e) { if (errEl) errEl.innerText = '초기화 오류: ' + e.message; }
 }
 
 function updateFbBtn(connected) {
@@ -1425,19 +1384,40 @@ function updateFbBtn(connected) {
     }
 }
 
-// 페이지 로드 시 저장된 Firebase 설정 자동 연결 시도
-window.addEventListener('DOMContentLoaded', () => {
-    loadQuestions(); loadPart1();
+// ── Firebase 자동 초기화 (하드코딩) ──
+const _FB_CONFIG = {
+    apiKey:            "AIzaSyCNrpKPtAUmyphKovSn302p-FLT4aMqRLw",
+    authDomain:        "workshop260623.firebaseapp.com",
+    databaseURL:       "https://workshop260623-default-rtdb.firebaseio.com",
+    projectId:         "workshop260623",
+    storageBucket:     "workshop260623.firebasestorage.app",
+    messagingSenderId: "1050275064090",
+    appId:             "1:1050275064090:web:47c2ddfb85abb91aa424a3"
+};
+
+function _autoConnectFirebase() {
     try {
-        const saved = JSON.parse(localStorage.getItem('fb_config') || '{}');
-        if (saved.databaseURL && saved.apiKey) {
-            ['apiKey','authDomain','databaseURL','projectId','appId'].forEach(k => {
-                const el = document.getElementById('fb-'+k);
-                if (el && saved[k]) el.value = saved[k];
-            });
-            connectFirebase();
-        }
-    } catch(e) {}
+        if (firebase.apps.length) firebase.apps.forEach(a => a.delete());
+        firebase.initializeApp(_FB_CONFIG);
+        fbDb = firebase.database();
+        fbDb.ref('.info/connected').on('value', snap => {
+            if (snap.val() === true) {
+                fbReady = true;
+                updateFbBtn(true);
+            } else {
+                fbReady = false;
+                updateFbBtn(false);
+            }
+        });
+    } catch(e) {
+        console.warn('Firebase 자동 연결 실패, localStorage 모드로 동작합니다.', e);
+    }
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    loadQuestions();
+    loadPart1();
+    _autoConnectFirebase();
 });
 
 /* ── 게임 상태 쓰기 (관리자 전용) ── */
